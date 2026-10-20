@@ -1,0 +1,120 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    match /publicContent/{contentId} {
+      allow get: if contentId == 'notesAndPricing';
+      allow list: if false;
+
+      allow create, update: if contentId == 'notesAndPricing'
+        && isAdmin()
+        && request.resource.data.keys().hasAll([
+          'notes', 'pricing', 'updatedAt', 'updatedBy'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'notes', 'pricing', 'updatedAt', 'updatedBy'
+        ])
+        && request.resource.data.notes is string
+        && request.resource.data.notes.size() <= 2000
+        && request.resource.data.pricing is string
+        && request.resource.data.pricing.size() <= 2000
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.updatedBy == request.auth.uid;
+
+      allow delete: if false;
+    }
+
+    match /appointments/{appointmentId} {
+      function ownsAppointment() {
+        return signedIn() && resource.data.userId == request.auth.uid;
+      }
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasAll([
+          'appointmentDate', 'timeSlot', 'customerName', 'phone',
+          'streetAddress', 'city', 'postalCode', 'issueDescription',
+          'userId', 'createdAt', 'status'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'appointmentDate', 'timeSlot', 'customerName', 'phone',
+          'streetAddress', 'city', 'postalCode', 'issueDescription',
+          'userId', 'userEmail', 'createdAt', 'status', 'photoPath'
+        ])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.appointmentDate is timestamp
+        && request.resource.data.timeSlot is string
+        && request.resource.data.customerName is string
+        && request.resource.data.phone is string
+        && request.resource.data.streetAddress is string
+        && request.resource.data.city is string
+        && request.resource.data.postalCode is string
+        && request.resource.data.issueDescription is string
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.status == 'scheduled'
+        && (!('userEmail' in request.resource.data)
+          || request.resource.data.userEmail is string)
+        && (!('photoPath' in request.resource.data)
+          || request.resource.data.photoPath is string);
+
+      // Admin-only placeholder entry that blocks a time slot from booking.
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly([
+          'appointmentDate', 'timeSlot', 'status', 'createdBy', 'createdAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'appointmentDate', 'timeSlot', 'status', 'createdBy', 'createdAt'
+        ])
+        && request.resource.data.status == 'blockedoff'
+        && request.resource.data.appointmentDate is timestamp
+        && request.resource.data.timeSlot is string
+        && request.resource.data.timeSlot.size() <= 40
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+
+      allow get, list: if ownsAppointment() || isAdmin();
+
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status'])
+        && request.resource.data.status in ['scheduled', 'cancelled', 'completed'];
+
+      allow delete: if isAdmin();
+    }
+
+    // Public-safe availability index: no personal data, one doc per date+slot.
+    match /bookedSlots/{slotId} {
+      function linkedAppointment() {
+        return getAfter(/databases/$(database)/documents/appointments/$(request.resource.data.appointmentId)).data;
+      }
+
+      allow get, list: if signedIn();
+
+      // Must be written in the same batch as the appointment it refers to.
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+          'appointmentDate', 'timeSlot', 'appointmentId'
+        ])
+        && request.resource.data.keys().hasAll([
+          'appointmentDate', 'timeSlot', 'appointmentId'
+        ])
+        && request.resource.data.appointmentDate is timestamp
+        && request.resource.data.timeSlot is string
+        && request.resource.data.timeSlot.size() <= 40
+        && request.resource.data.appointmentId is string
+        && linkedAppointment().appointmentDate == request.resource.data.appointmentDate
+        && linkedAppointment().timeSlot == request.resource.data.timeSlot
+        && (linkedAppointment().get('userId', '') == request.auth.uid
+          || linkedAppointment().get('createdBy', '') == request.auth.uid);
+
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+  }
+}

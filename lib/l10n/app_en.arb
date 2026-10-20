@@ -1,0 +1,148 @@
+{
+  "@@locale": "en",
+  "appTitle": "Book Service",
+  "announcements": "Notes & Pricing",
+  "notes": "Notes",
+  "pricing": "Pricing",
+  "pricingNotAvailable": "Pricing information will be posted here.",
+  "updateNotesAndPricing": "Update Notes and Pricing",
+  "notesHint": "Add notes for customers",
+  "pricingHint": "Add pricing information for customers",
+  "save": "Save",
+  "saving": "Saving…",
+  "contentRequired": "Enter content before saving.",
+  "contentSaved": "Notes and pricing saved.",
+  "contentSaveFailed": "Could not save Notes and Pricing. Please try again.",
+  "book": "Book",
+  "latest": "Latest",
+  "latestAppointment": "Latest Appointment",
+  "signInToSeeLatestAppointment": "Sign in to see your latest appointment.",
+  "noLatestAppointment": "You don't have any appointments yet.",
+  "latestAppointmentLoadFailed": "Could not load your latest appointment. Please try again.",
+  "appointmentDateLabel": "Date",
+  "appointmentTimeLabel": "Time",
+  "appointmentStatusScheduled": "Scheduled",
+  "appointmentStatusCancelled": "Cancelled",
+  "appointmentStatusCompleted": "Completed",
+  "appointmentPhotoStored": "Photo provided with this booking and securely stored.",
+  "noAppointmentPhoto": "No photo was provided with this booking.",
+  "login": "Sign in",
+  "moreOptions": "More options",
+  "switchToLeftHandedLayout": "Switch to left-handed layout",
+  "switchToRightHandedLayout": "Switch to right-handed layout",
+  "switchToDarkTheme": "Switch to dark theme",
+  "switchToLightTheme": "Switch to light theme",
+  "adminLoginMenu": "Admin Login",
+  "adminLogoutMenu": "Admin Logout",
+  "review": "Review",
+  "blockOff": "Block-off",
+  "blockOffTitle": "Block off time",
+  "selectDateToBlock": "Select a date before choosing times to block.",
+  "selectTimeSlotsToBlock": "Select time slots to block",
+  "blockOffSaved": "Blocked-off times saved.",
+  "blockOffSaveFailed": "Could not save the blocked-off times. Try again.",
+  "eula": "EULA",
+  "info": "Info",
+  "menuActionComingSoon": "{item} is not available yet.",
+  "@menuActionComingSoon": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
+  "close": "Close",
+  "selectServiceArea": "Select Service Area",
+  "tapServiceArea": "Tap a highlighted area to continue.",
+  "downtownServiceArea": "Downtown",
+  "etobicokeServiceArea": "Etobicoke",
+  "scarboroughServiceArea": "Scarborough",
+  "continueBooking": "Continue",
+  "chooseAppointmentDateAndTime": "Choose appointment date and time",
+  "serviceAreaForBooking": "Service area: {area}",
+  "@serviceAreaForBooking": {
+    "placeholders": {
+      "area": {
+        "type": "String"
+      }
+    }
+  },
+  "changeServiceArea": "Change service area",
+  "timeSlotMorning": "9 am - 11 am",
+  "timeSlotMidday": "11 am - 1 pm",
+  "timeSlotAfternoon": "1 pm - 3 pm",
+  "timeSlotEvening": "3 pm - 5 pm",
+  "selectDateForTimes": "Select a date to check this time.",
+  "timeSlotUnavailable": "Unavailable for this date",
+  "timeSlotBookedByCustomer": "Already booked by a customer",
+  "bookingSlotSelected": "You selected {date} at {time}.",
+  "@bookingSlotSelected": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "customerDetailsTitle": "Enter contact details",
+  "appointmentSummary": "Appointment",
+  "customerName": "Name",
+  "followUpPhoneRequired": "Follow-up phone (required)",
+  "phoneRequired": "Enter a follow-up phone number.",
+  "phoneInvalid": "Use 9999999999, 999-999-9999, or 999-9999999 format.",
+  "numberAndStreet": "Number and street",
+  "city": "City",
+  "postalCodeRequired": "Postal code (required)",
+  "postalCodeRequiredError": "Enter a postal code.",
+  "postalCodeInvalid": "Use A9A9A9 or A9A 9A9 postal-code format.",
+  "natureOfIssue": "Nature of the issue",
+  "addPhotoAttachment": "Add photo attachment",
+  "removePhoto": "Remove photo",
+  "photoPickerFailed": "Could not open photo attachments. Please try again.",
+  "detailsReadyForReview": "Details are ready for review.",
+  "bookedSuccessfully": "Appointment Booked",
+  "bookingSaveFailed": "Could not save your appointment. Please try again.",
+  "savingBooking": "Saving appointment…",
+  "back": "Back",
+  "bookingDateTime": "{date} · {time}",
+  "@bookingDateTime": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "signInToContinue": "Sign in to continue",
+  "providerSignInOnly": "Use a provider account to continue.",
+  "providerDataPrivacy": "We only use the information needed to sign you in; we don't access or store the rest of your provider account.",
+  "loginWithGoogle": "Sign in with Google",
+  "loginWithFacebook": "Sign in with Facebook",
+  "cancel": "Cancel",
+  "signedIn": "You are signed in",
+  "accountReady": "Your account is ready to continue.",
+  "signOut": "Sign out",
+  "signingIn": "Signing in…",
+  "adminSignInPrompt": "Sign in with your administrator account.",
+  "emailAddress": "Email address",
+  "emailRequired": "Enter your email address.",
+  "password": "Password",
+  "passwordRequired": "Enter your password.",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+  "adminSignInFailed": "Unable to sign in with these credentials.",
+  "adminInvalidCredentials": "Email or password is incorrect. Check the Authentication Emulator account and try again.",
+  "adminConnectionFailed": "Could not reach the Authentication Emulator. Check that demo-bserv is running and try again.",
+  "adminTooManyAttempts": "Too many sign-in attempts. Wait a moment and try again.",
+  "adminAccessRequired": "This account is not an administrator account.",
+  "signInFailed": "We could not sign you in. Please try again.",
+  "mapAttribution": "© OpenStreetMap contributors",
+  "announcementDate": "2026-10-02",
+  "announcementHeading": "Service update",
+  "announcementMessage": "We are updating our service schedule. Please check here for the latest availability.",
+  "loginComingSoon": "Sign in will be available soon."
+}
