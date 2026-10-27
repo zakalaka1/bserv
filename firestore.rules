@@ -31,6 +31,26 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Admin-only running notes; never exposed to customers.
+    match /workNotes/{notesId} {
+      allow get, list: if isAdmin();
+
+      allow create, update: if isAdmin()
+        && notesId == 'main'
+        && request.resource.data.keys().hasAll([
+          'notes', 'updatedAt', 'updatedBy'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'notes', 'updatedAt', 'updatedBy'
+        ])
+        && request.resource.data.notes is string
+        && request.resource.data.notes.size() <= 32000
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.updatedBy == request.auth.uid;
+
+      allow delete: if false;
+    }
+
     match /appointments/{appointmentId} {
       function ownsAppointment() {
         return signedIn() && resource.data.userId == request.auth.uid;
@@ -40,12 +60,13 @@ service cloud.firestore {
         && request.resource.data.keys().hasAll([
           'appointmentDate', 'timeSlot', 'customerName', 'phone',
           'streetAddress', 'city', 'postalCode', 'issueDescription',
-          'userId', 'createdAt', 'status'
+          'userId', 'createdAt', 'status', 'serviceType'
         ])
         && request.resource.data.keys().hasOnly([
           'appointmentDate', 'timeSlot', 'customerName', 'phone',
           'streetAddress', 'city', 'postalCode', 'issueDescription',
-          'userId', 'userEmail', 'createdAt', 'status', 'photoPath'
+          'userId', 'userEmail', 'createdAt', 'status', 'photoPath',
+          'serviceType'
         ])
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.appointmentDate is timestamp
@@ -56,6 +77,8 @@ service cloud.firestore {
         && request.resource.data.city is string
         && request.resource.data.postalCode is string
         && request.resource.data.issueDescription is string
+        && request.resource.data.serviceType is string
+        && request.resource.data.serviceType.size() <= 40
         && request.resource.data.createdAt == request.time
         && request.resource.data.status == 'scheduled'
         && (!('userEmail' in request.resource.data)
@@ -84,6 +107,37 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['status'])
         && request.resource.data.status in ['scheduled', 'cancelled', 'completed'];
+
+      // Customers may cancel their own scheduled appointment.
+      allow update: if ownsAppointment()
+        && resource.data.status == 'scheduled'
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status'])
+        && request.resource.data.status == 'cancelled';
+
+      // Customers may edit the name, issue description, and add a photo on
+      // their own scheduled appointment. The photo is add-only so an existing
+      // attachment cannot be replaced or removed.
+      allow update: if ownsAppointment()
+        && resource.data.status == 'scheduled'
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['customerName', 'issueDescription', 'photoPath'])
+        && request.resource.data.customerName is string
+        && request.resource.data.customerName.size() <= 80
+        && request.resource.data.issueDescription is string
+        && request.resource.data.issueDescription.size() <= 2000
+        && (!request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['photoPath'])
+          || (request.resource.data.photoPath is string
+            && resource.data.get('photoPath', '') == ''));
+
+      // Admins may attach a free-text note to any booking; an empty string
+      // clears it, so the field stays a string for every write.
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['adminNote'])
+        && request.resource.data.adminNote is string
+        && request.resource.data.adminNote.size() <= 2000;
 
       allow delete: if isAdmin();
     }
@@ -114,7 +168,14 @@ service cloud.firestore {
           || linkedAppointment().get('createdBy', '') == request.auth.uid);
 
       allow update: if false;
+
+      // Admins release slots when unblocking; customers release only the slot
+      // of their own appointment (a missing slot doc is a harmless no-op).
       allow delete: if isAdmin();
+      allow delete: if signedIn()
+        && (resource == null
+          || (resource.data.appointmentId is string
+            && get(/databases/$(database)/documents/appointments/$(resource.data.appointmentId)).data.userId == request.auth.uid));
     }
   }
 }

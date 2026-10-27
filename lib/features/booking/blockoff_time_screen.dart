@@ -136,12 +136,6 @@ class _BlockoffTimeScreenState extends State<BlockoffTimeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  localizations.blockOffTitle,
-                  style: Theme.of(context).textTheme.titleLarge,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
                 Card(
                   clipBehavior: Clip.antiAlias,
                   child: Padding(

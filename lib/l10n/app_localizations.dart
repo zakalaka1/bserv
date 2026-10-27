@@ -172,6 +172,30 @@ abstract class AppLocalizations {
   /// **'Could not save Notes and Pricing. Please try again.'**
   String get contentSaveFailed;
 
+  /// No description provided for @workNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Work Notes'**
+  String get workNotes;
+
+  /// No description provided for @workNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add work notes'**
+  String get workNotesHint;
+
+  /// No description provided for @workNotesSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Work notes saved.'**
+  String get workNotesSaved;
+
+  /// No description provided for @workNotesSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save work notes. Please try again.'**
+  String get workNotesSaveFailed;
+
   /// No description provided for @book.
   ///
   /// In en, this message translates to:
@@ -304,6 +328,24 @@ abstract class AppLocalizations {
   /// **'Review'**
   String get review;
 
+  /// No description provided for @reviewBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'Review bookings'**
+  String get reviewBookings;
+
+  /// No description provided for @details.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get details;
+
+  /// No description provided for @bookingDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking Details'**
+  String get bookingDetails;
+
   /// No description provided for @blockOff.
   ///
   /// In en, this message translates to:
@@ -328,6 +370,12 @@ abstract class AppLocalizations {
   /// **'Select time slots to block'**
   String get selectTimeSlotsToBlock;
 
+  /// No description provided for @blockedOffStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked off'**
+  String get blockedOffStatus;
+
   /// No description provided for @blockOffSaved.
   ///
   /// In en, this message translates to:
@@ -339,6 +387,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not save the blocked-off times. Try again.'**
   String get blockOffSaveFailed;
+
+  /// No description provided for @free.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get free;
+
+  /// No description provided for @previousDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous day'**
+  String get previousDay;
+
+  /// No description provided for @nextDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Next day'**
+  String get nextDay;
+
+  /// No description provided for @markCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get markCompleted;
+
+  /// No description provided for @markScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get markScheduled;
+
+  /// No description provided for @markCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get markCancelled;
+
+  /// No description provided for @statusUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update the appointment status. Try again.'**
+  String get statusUpdateFailed;
+
+  /// No description provided for @cancelAppointment.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel appointment'**
+  String get cancelAppointment;
+
+  /// No description provided for @cancelAppointmentPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure?'**
+  String get cancelAppointmentPrompt;
+
+  /// No description provided for @cancelAppointmentMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will cancel your appointment and free the time slot for another customer.'**
+  String get cancelAppointmentMessage;
+
+  /// No description provided for @yes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get yes;
+
+  /// No description provided for @appointmentCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Your appointment was cancelled.'**
+  String get appointmentCancelled;
+
+  /// No description provided for @appointmentCancelFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not cancel your appointment. Please try again.'**
+  String get appointmentCancelFailed;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @appointmentUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Appointment updated.'**
+  String get appointmentUpdated;
+
+  /// No description provided for @appointmentUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update your appointment. Please try again.'**
+  String get appointmentUpdateFailed;
+
+  /// No description provided for @reviewDetailsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this day\'s bookings. Try again.'**
+  String get reviewDetailsLoadFailed;
+
+  /// No description provided for @addComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Add comment'**
+  String get addComment;
+
+  /// No description provided for @editComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit comment'**
+  String get editComment;
+
+  /// No description provided for @commentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note about this appointment'**
+  String get commentHint;
+
+  /// No description provided for @commentSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment saved.'**
+  String get commentSaved;
+
+  /// No description provided for @commentSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the comment. Please try again.'**
+  String get commentSaveFailed;
+
+  /// No description provided for @phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get phone;
+
+  /// No description provided for @address.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get address;
 
   /// No description provided for @eula.
   ///
@@ -376,23 +568,11 @@ abstract class AppLocalizations {
   /// **'Tap a highlighted area to continue.'**
   String get tapServiceArea;
 
-  /// No description provided for @downtownServiceArea.
+  /// No description provided for @typeOfService.
   ///
   /// In en, this message translates to:
-  /// **'Downtown'**
-  String get downtownServiceArea;
-
-  /// No description provided for @etobicokeServiceArea.
-  ///
-  /// In en, this message translates to:
-  /// **'Etobicoke'**
-  String get etobicokeServiceArea;
-
-  /// No description provided for @scarboroughServiceArea.
-  ///
-  /// In en, this message translates to:
-  /// **'Scarborough'**
-  String get scarboroughServiceArea;
+  /// **'Type of service'**
+  String get typeOfService;
 
   /// No description provided for @continueBooking.
   ///
@@ -411,6 +591,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Service area: {area}'**
   String serviceAreaForBooking(String area);
+
+  /// No description provided for @serviceTypeForBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Type of service: {type}'**
+  String serviceTypeForBooking(String type);
 
   /// No description provided for @changeServiceArea.
   ///
@@ -469,7 +655,7 @@ abstract class AppLocalizations {
   /// No description provided for @customerDetailsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Enter contact details'**
+  /// **'Enter contact information'**
   String get customerDetailsTitle;
 
   /// No description provided for @appointmentSummary.
@@ -531,6 +717,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use A9A9A9 or A9A 9A9 postal-code format.'**
   String get postalCodeInvalid;
+
+  /// No description provided for @postalCodeOutsideServiceArea.
+  ///
+  /// In en, this message translates to:
+  /// **'This postal code is outside our service area.'**
+  String get postalCodeOutsideServiceArea;
 
   /// No description provided for @natureOfIssue.
   ///

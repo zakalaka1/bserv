@@ -14,7 +14,6 @@ class BookingCalendarScreen extends StatefulWidget {
     required this.bookedSlots,
     this.initialDate,
     this.initialTimeSlot,
-    required this.onBack,
     required this.onContinue,
   });
 
@@ -24,7 +23,6 @@ class BookingCalendarScreen extends StatefulWidget {
   final Stream<List<BookedSlot>> bookedSlots;
   final DateTime? initialDate;
   final String? initialTimeSlot;
-  final VoidCallback onBack;
   final void Function(DateTime date, String timeSlot) onContinue;
 
   @override
@@ -39,7 +37,11 @@ class _BookingCalendarScreenState extends State<BookingCalendarScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedDate = widget.initialDate;
+    // Default to the earliest bookable date (today + minimumLeadDays, skipping
+    // weekends) so the highlighted calendar day and its available time slots
+    // are both ready without requiring an extra tap.
+    _selectedDate =
+        widget.initialDate ?? BookingSchedule.firstBookableDate(_today);
     for (final slot in _BookingTimeSlot.values) {
       if (slot.name == widget.initialTimeSlot) {
         _selectedTimeSlot = slot;
@@ -116,18 +118,9 @@ class _BookingCalendarScreenState extends State<BookingCalendarScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  localizations.serviceAreaForBooking(
-                    widget.serviceArea.name(localizations),
-                  ),
+                  localizations.serviceAreaForBooking(widget.serviceArea.name),
                   style: Theme.of(context).textTheme.bodyMedium,
                   textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                TextButton.icon(
-                  key: const ValueKey('change-service-area'),
-                  onPressed: widget.onBack,
-                  icon: const Icon(Icons.location_on_outlined),
-                  label: Text(localizations.changeServiceArea),
                 ),
                 Card(
                   clipBehavior: Clip.antiAlias,

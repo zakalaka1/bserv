@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../app/app_config.dart';
 import '../../data/appointments/appointment_repository.dart';
 import '../../features/service_area/service_area_map.dart';
 import '../../l10n/app_localizations.dart';
@@ -10,12 +11,14 @@ class CustomerDetailsScreen extends StatefulWidget {
   const CustomerDetailsScreen({
     super.key,
     required this.serviceArea,
+    required this.serviceType,
     required this.appointmentDate,
     required this.timeSlot,
     required this.onBook,
   });
 
   final ServiceArea serviceArea;
+  final ServiceType serviceType;
   final DateTime appointmentDate;
   final String timeSlot;
   final Future<void> Function(AppointmentDraft draft) onBook;
@@ -86,6 +89,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
         AppointmentDraft(
           appointmentDate: widget.appointmentDate,
           timeSlot: widget.timeSlot,
+          serviceType: widget.serviceType.storageValue,
           customerName: _nameController.text,
           phone: _phoneController.text,
           streetAddress: _streetController.text,
@@ -121,6 +125,9 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     if (postalCode.isEmpty) return localizations.postalCodeRequiredError;
     if (!RegExp(r'^[A-Za-z]\d[A-Za-z] ?\d[A-Za-z]\d$').hasMatch(postalCode)) {
       return localizations.postalCodeInvalid;
+    }
+    if (!ServiceAreaCoverage.isServicedPostalCode(postalCode)) {
+      return localizations.postalCodeOutsideServiceArea;
     }
     return null;
   }
@@ -166,7 +173,12 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                           const SizedBox(height: 8),
                           Text(
                             localizations.serviceAreaForBooking(
-                              widget.serviceArea.name(localizations),
+                              widget.serviceArea.name,
+                            ),
+                          ),
+                          Text(
+                            localizations.serviceTypeForBooking(
+                              widget.serviceType.label,
                             ),
                           ),
                           Text(

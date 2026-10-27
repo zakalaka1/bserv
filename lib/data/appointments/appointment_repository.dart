@@ -15,6 +15,7 @@ class AppointmentDraft {
     required this.city,
     required this.postalCode,
     required this.issueDescription,
+    required this.serviceType,
     this.photo,
   });
 
@@ -26,7 +27,38 @@ class AppointmentDraft {
   final String city;
   final String postalCode;
   final String issueDescription;
+
+  /// What the customer booked, for example `maintain heat`.
+  final String serviceType;
   final XFile? photo;
+}
+
+/// Normalizes a phone number to `999-999-9999` for storage.
+///
+/// The form accepts `9999999999`, `999-999-9999`, and `999-9999999`; every one
+/// of those becomes `999-999-9999`. Input that does not carry 10 digits is
+/// returned trimmed so nothing is silently lost. Applying this twice is safe.
+String formatPhoneNumber(String input) {
+  final digits = input.replaceAll(RegExp(r'[^0-9]'), '');
+  if (digits.length == 10) {
+    return '${digits.substring(0, 3)}-${digits.substring(3, 6)}-'
+        '${digits.substring(6)}';
+  }
+  return input.trim();
+}
+
+/// Normalizes a postal code to `A9A 9A9` for storage (uppercase, one space
+/// after the third character). Accepts `A9A9A9` and `A9A 9A9`, any case.
+/// Input without six alphanumerics is returned trimmed and uppercased. Applying
+/// this twice is safe.
+String formatPostalCode(String input) {
+  final characters = input
+      .replaceAll(RegExp(r'[^A-Za-z0-9]'), '')
+      .toUpperCase();
+  if (characters.length == 6) {
+    return '${characters.substring(0, 3)} ${characters.substring(3)}';
+  }
+  return input.trim().toUpperCase();
 }
 
 class AppointmentRecord {
@@ -43,6 +75,8 @@ class AppointmentRecord {
     required this.status,
     required this.createdAt,
     this.photoPath,
+    this.adminNote = '',
+    this.serviceType = '',
   });
 
   final String id;
@@ -57,6 +91,12 @@ class AppointmentRecord {
   final String status;
   final DateTime createdAt;
   final String? photoPath;
+
+  /// Admin-only free-text note about this booking; blank when none was saved.
+  final String adminNote;
+
+  /// The booked service, for example `maintain heat`; blank for older records.
+  final String serviceType;
 
   factory AppointmentRecord.fromDocument(
     QueryDocumentSnapshot<Map<String, dynamic>> document,
@@ -75,6 +115,8 @@ class AppointmentRecord {
       status: data['status'] as String? ?? 'scheduled',
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime(1970),
       photoPath: data['photoPath'] as String?,
+      adminNote: data['adminNote'] as String? ?? '',
+      serviceType: data['serviceType'] as String? ?? '',
     );
   }
 }
@@ -110,6 +152,33 @@ abstract interface class AppointmentRepository {
     DateTime date, {
     required Set<String> block,
     required Set<String> unblock,
+  });
+
+  /// Every customer appointment on [date]; blocked-off entries are excluded.
+  Stream<List<AppointmentRecord>> watchAppointmentsByDate(DateTime date);
+
+  /// A download URL for a stored appointment photo, or null if unavailable.
+  Future<String?> appointmentPhotoUrl(String photoPath);
+
+  /// Marks [appointmentId] `completed` or `cancelled` (admin only).
+  Future<void> updateAppointmentStatus(String appointmentId, String status);
+
+  /// Stores the admin's free-text note on [appointmentId]; an empty [note]
+  /// clears it.
+  Future<void> updateAppointmentNote(String appointmentId, String note);
+
+  /// Cancels the signed-in customer's own appointment and frees its time slot
+  /// so another customer can book it.
+  Future<void> cancelAppointment(AppointmentRecord appointment);
+
+  /// Edits the signed-in customer's own appointment, changing only the fields
+  /// that are provided. A [photo] is uploaded and stored as an attachment; the
+  /// booking rules allow adding a photo only when none is stored yet.
+  Future<void> updateOwnAppointment(
+    String appointmentId, {
+    String? customerName,
+    String? issueDescription,
+    XFile? photo,
   });
 }
 
@@ -150,11 +219,12 @@ class FirebaseAppointmentRepository implements AppointmentRepository {
         'appointmentDate': Timestamp.fromDate(day),
         'timeSlot': draft.timeSlot,
         'customerName': draft.customerName.trim(),
-        'phone': draft.phone.trim(),
+        'phone': formatPhoneNumber(draft.phone),
         'streetAddress': draft.streetAddress.trim(),
         'city': draft.city.trim(),
-        'postalCode': draft.postalCode.trim().toUpperCase(),
+        'postalCode': formatPostalCode(draft.postalCode),
         'issueDescription': draft.issueDescription.trim(),
+        'serviceType': draft.serviceType.trim(),
         'userId': user.uid,
         'userEmail': ?user.email,
         'createdAt': FieldValue.serverTimestamp(),
@@ -274,6 +344,134 @@ class FirebaseAppointmentRepository implements AppointmentRepository {
       batch.delete(_firestore.collection('bookedSlots').doc(id));
     }
     await batch.commit();
+  }
+
+  @override
+  Stream<List<AppointmentRecord>> watchAppointmentsByDate(DateTime date) {
+    // A single equality filter keeps this on the automatic single-field index;
+    // blocked-off entries are dropped in Dart because they are not bookings.
+    return _firestore
+        .collection('appointments')
+        .where(
+          'appointmentDate',
+          isEqualTo: Timestamp.fromDate(_dateOnly(date)),
+        )
+        .snapshots()
+        .map(
+          (snapshot) => [
+            for (final document in snapshot.docs)
+              if (document.data()['status'] != 'blockedoff')
+                AppointmentRecord.fromDocument(document),
+          ],
+        );
+  }
+
+  @override
+  Future<String?> appointmentPhotoUrl(String photoPath) async {
+    try {
+      return await _storage.ref(photoPath).getDownloadURL();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<void> updateAppointmentStatus(
+    String appointmentId,
+    String status,
+  ) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw StateError('An authenticated admin user is required.');
+    }
+
+    await _firestore.collection('appointments').doc(appointmentId).update({
+      'status': status,
+    });
+  }
+
+  @override
+  Future<void> updateAppointmentNote(String appointmentId, String note) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw StateError('An authenticated admin user is required.');
+    }
+
+    // An empty string keeps the field always present, which keeps the
+    // Firestore rule simple and lets the admin clear a note.
+    await _firestore.collection('appointments').doc(appointmentId).update({
+      'adminNote': note.trim(),
+    });
+  }
+
+  @override
+  Future<void> cancelAppointment(AppointmentRecord appointment) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw StateError('An authenticated user is required to cancel.');
+    }
+
+    final day = _dateOnly(appointment.appointmentDate);
+    final batch = _firestore.batch();
+    batch.update(_firestore.collection('appointments').doc(appointment.id), {
+      'status': 'cancelled',
+    });
+    // Releasing the slot lets another customer book the same time.
+    batch.delete(
+      _firestore
+          .collection('bookedSlots')
+          .doc(_slotId(day, appointment.timeSlot)),
+    );
+    await batch.commit();
+  }
+
+  @override
+  Future<void> updateOwnAppointment(
+    String appointmentId, {
+    String? customerName,
+    String? issueDescription,
+    XFile? photo,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw StateError('An authenticated user is required to update.');
+    }
+
+    String? photoPath;
+    try {
+      if (photo != null) {
+        final reference = _storage
+            .ref('appointment-photos/${user.uid}/$appointmentId')
+            .child(_safeFileName(photo.name));
+        final Uint8List bytes = await photo.readAsBytes();
+        await reference.putData(
+          bytes,
+          SettableMetadata(contentType: _contentType(photo.name)),
+        );
+        photoPath = reference.fullPath;
+      }
+
+      final updates = <String, Object>{
+        if (customerName != null) 'customerName': customerName.trim(),
+        if (issueDescription != null)
+          'issueDescription': issueDescription.trim(),
+        'photoPath': ?photoPath,
+      };
+      if (updates.isEmpty) return;
+
+      await _firestore
+          .collection('appointments')
+          .doc(appointmentId)
+          .update(updates);
+    } catch (_) {
+      // Do not leave an orphaned object behind when the document write fails.
+      if (photoPath != null) {
+        try {
+          await _storage.ref(photoPath).delete();
+        } catch (_) {}
+      }
+      rethrow;
+    }
   }
 
   DateTime _dateOnly(DateTime value) =>

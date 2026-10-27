@@ -13,6 +13,10 @@
   "contentRequired": "Enter content before saving.",
   "contentSaved": "Notes and pricing saved.",
   "contentSaveFailed": "Could not save Notes and Pricing. Please try again.",
+  "workNotes": "Work Notes",
+  "workNotesHint": "Add work notes",
+  "workNotesSaved": "Work notes saved.",
+  "workNotesSaveFailed": "Could not save work notes. Please try again.",
   "book": "Book",
   "latest": "Latest",
   "latestAppointment": "Latest Appointment",
@@ -35,12 +39,40 @@
   "adminLoginMenu": "Admin Login",
   "adminLogoutMenu": "Admin Logout",
   "review": "Review",
+  "reviewBookings": "Review bookings",
+  "details": "Details",
+  "bookingDetails": "Booking Details",
   "blockOff": "Block-off",
   "blockOffTitle": "Block off time",
   "selectDateToBlock": "Select a date before choosing times to block.",
   "selectTimeSlotsToBlock": "Select time slots to block",
+  "blockedOffStatus": "Blocked off",
   "blockOffSaved": "Blocked-off times saved.",
   "blockOffSaveFailed": "Could not save the blocked-off times. Try again.",
+  "free": "Free",
+  "previousDay": "Previous day",
+  "nextDay": "Next day",
+  "markCompleted": "Complete",
+  "markScheduled": "Schedule",
+  "markCancelled": "Cancel",
+  "statusUpdateFailed": "Could not update the appointment status. Try again.",
+  "cancelAppointment": "Cancel appointment",
+  "cancelAppointmentPrompt": "Are you sure?",
+  "cancelAppointmentMessage": "This will cancel your appointment and free the time slot for another customer.",
+  "yes": "Yes",
+  "appointmentCancelled": "Your appointment was cancelled.",
+  "appointmentCancelFailed": "Could not cancel your appointment. Please try again.",
+  "edit": "Edit",
+  "appointmentUpdated": "Appointment updated.",
+  "appointmentUpdateFailed": "Could not update your appointment. Please try again.",
+  "reviewDetailsLoadFailed": "Could not load this day's bookings. Try again.",
+  "addComment": "Add comment",
+  "editComment": "Edit comment",
+  "commentHint": "Add a note about this appointment",
+  "commentSaved": "Comment saved.",
+  "commentSaveFailed": "Could not save the comment. Please try again.",
+  "phone": "Phone",
+  "address": "Address",
   "eula": "EULA",
   "info": "Info",
   "menuActionComingSoon": "{item} is not available yet.",
@@ -54,15 +86,21 @@
   "close": "Close",
   "selectServiceArea": "Select Service Area",
   "tapServiceArea": "Tap a highlighted area to continue.",
-  "downtownServiceArea": "Downtown",
-  "etobicokeServiceArea": "Etobicoke",
-  "scarboroughServiceArea": "Scarborough",
+  "typeOfService": "Type of service",
   "continueBooking": "Continue",
   "chooseAppointmentDateAndTime": "Choose appointment date and time",
   "serviceAreaForBooking": "Service area: {area}",
   "@serviceAreaForBooking": {
     "placeholders": {
       "area": {
+        "type": "String"
+      }
+    }
+  },
+  "serviceTypeForBooking": "Type of service: {type}",
+  "@serviceTypeForBooking": {
+    "placeholders": {
+      "type": {
         "type": "String"
       }
     }
@@ -86,7 +124,7 @@
       }
     }
   },
-  "customerDetailsTitle": "Enter contact details",
+  "customerDetailsTitle": "Enter contact information",
   "appointmentSummary": "Appointment",
   "customerName": "Name",
   "followUpPhoneRequired": "Follow-up phone (required)",
@@ -97,6 +135,7 @@
   "postalCodeRequired": "Postal code (required)",
   "postalCodeRequiredError": "Enter a postal code.",
   "postalCodeInvalid": "Use A9A9A9 or A9A 9A9 postal-code format.",
+  "postalCodeOutsideServiceArea": "This postal code is outside our service area.",
   "natureOfIssue": "Nature of the issue",
   "addPhotoAttachment": "Add photo attachment",
   "removePhoto": "Remove photo",

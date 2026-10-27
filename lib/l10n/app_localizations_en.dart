@@ -50,6 +50,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not save Notes and Pricing. Please try again.';
 
   @override
+  String get workNotes => 'Work Notes';
+
+  @override
+  String get workNotesHint => 'Add work notes';
+
+  @override
+  String get workNotesSaved => 'Work notes saved.';
+
+  @override
+  String get workNotesSaveFailed =>
+      'Could not save work notes. Please try again.';
+
+  @override
   String get book => 'Book';
 
   @override
@@ -119,6 +132,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get review => 'Review';
 
   @override
+  String get reviewBookings => 'Review bookings';
+
+  @override
+  String get details => 'Details';
+
+  @override
+  String get bookingDetails => 'Booking Details';
+
+  @override
   String get blockOff => 'Block-off';
 
   @override
@@ -132,11 +154,92 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectTimeSlotsToBlock => 'Select time slots to block';
 
   @override
+  String get blockedOffStatus => 'Blocked off';
+
+  @override
   String get blockOffSaved => 'Blocked-off times saved.';
 
   @override
   String get blockOffSaveFailed =>
       'Could not save the blocked-off times. Try again.';
+
+  @override
+  String get free => 'Free';
+
+  @override
+  String get previousDay => 'Previous day';
+
+  @override
+  String get nextDay => 'Next day';
+
+  @override
+  String get markCompleted => 'Complete';
+
+  @override
+  String get markScheduled => 'Schedule';
+
+  @override
+  String get markCancelled => 'Cancel';
+
+  @override
+  String get statusUpdateFailed =>
+      'Could not update the appointment status. Try again.';
+
+  @override
+  String get cancelAppointment => 'Cancel appointment';
+
+  @override
+  String get cancelAppointmentPrompt => 'Are you sure?';
+
+  @override
+  String get cancelAppointmentMessage =>
+      'This will cancel your appointment and free the time slot for another customer.';
+
+  @override
+  String get yes => 'Yes';
+
+  @override
+  String get appointmentCancelled => 'Your appointment was cancelled.';
+
+  @override
+  String get appointmentCancelFailed =>
+      'Could not cancel your appointment. Please try again.';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get appointmentUpdated => 'Appointment updated.';
+
+  @override
+  String get appointmentUpdateFailed =>
+      'Could not update your appointment. Please try again.';
+
+  @override
+  String get reviewDetailsLoadFailed =>
+      'Could not load this day\'s bookings. Try again.';
+
+  @override
+  String get addComment => 'Add comment';
+
+  @override
+  String get editComment => 'Edit comment';
+
+  @override
+  String get commentHint => 'Add a note about this appointment';
+
+  @override
+  String get commentSaved => 'Comment saved.';
+
+  @override
+  String get commentSaveFailed =>
+      'Could not save the comment. Please try again.';
+
+  @override
+  String get phone => 'Phone';
+
+  @override
+  String get address => 'Address';
 
   @override
   String get eula => 'EULA';
@@ -159,13 +262,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tapServiceArea => 'Tap a highlighted area to continue.';
 
   @override
-  String get downtownServiceArea => 'Downtown';
-
-  @override
-  String get etobicokeServiceArea => 'Etobicoke';
-
-  @override
-  String get scarboroughServiceArea => 'Scarborough';
+  String get typeOfService => 'Type of service';
 
   @override
   String get continueBooking => 'Continue';
@@ -176,6 +273,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String serviceAreaForBooking(String area) {
     return 'Service area: $area';
+  }
+
+  @override
+  String serviceTypeForBooking(String type) {
+    return 'Type of service: $type';
   }
 
   @override
@@ -208,7 +310,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get customerDetailsTitle => 'Enter contact details';
+  String get customerDetailsTitle => 'Enter contact information';
 
   @override
   String get appointmentSummary => 'Appointment';
@@ -240,6 +342,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get postalCodeInvalid => 'Use A9A9A9 or A9A 9A9 postal-code format.';
+
+  @override
+  String get postalCodeOutsideServiceArea =>
+      'This postal code is outside our service area.';
 
   @override
   String get natureOfIssue => 'Nature of the issue';

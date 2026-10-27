@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../data/appointments/appointment_repository.dart';
 import '../data/content/business_content_repository.dart';
+import '../data/content/work_notes_repository.dart';
 import '../l10n/app_localizations.dart';
 import '../services/auth_gateway.dart';
 import 'book_service_shell.dart';
@@ -15,11 +16,13 @@ class BookServiceApp extends StatefulWidget {
     required this.authGateway,
     required this.appointmentRepository,
     required this.businessContentRepository,
+    required this.workNotesRepository,
   });
 
   final AuthGateway authGateway;
   final AppointmentRepository appointmentRepository;
   final BusinessContentRepository businessContentRepository;
+  final WorkNotesRepository workNotesRepository;
 
   @override
   State<BookServiceApp> createState() => _BookServiceAppState();
@@ -90,6 +93,7 @@ class _BookServiceAppState extends State<BookServiceApp> {
         authGateway: widget.authGateway,
         appointmentRepository: widget.appointmentRepository,
         businessContentRepository: widget.businessContentRepository,
+        workNotesRepository: widget.workNotesRepository,
         isLeftHanded: _isLeftHanded,
         onToggleHandedness: _toggleHandedness,
         onToggleTheme: _toggleTheme,
