@@ -165,7 +165,7 @@ class _ServiceAreaMapState extends State<ServiceAreaMap> {
           children: [
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.example.bserv',
+              userAgentPackageName: 'com.gtagas.bserv',
             ),
             GestureDetector(
               onTap: () {

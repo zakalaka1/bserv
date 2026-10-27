@@ -1,5 +1,6 @@
 {
     "projects": {
-        "default": "demo-bserv"
+        "default": "bserv-512916",
+        "emulator": "demo-bserv"
     }
 }

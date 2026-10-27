@@ -25,5 +25,26 @@
             "port": 4300
         },
         "singleProjectMode": true
+    },
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "bserv-512916",
+                    "appId": "1:181821889100:android:7752fc55e7d73019f0f2e9",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "bserv-512916",
+                    "configurations": {
+                        "android": "1:181821889100:android:7752fc55e7d73019f0f2e9",
+                        "ios": "1:181821889100:ios:dfc9c0032e6eec88f0f2e9",
+                        "web": "1:181821889100:web:623e17d8facb8d83f0f2e9"
+                    }
+                }
+            }
+        }
     }
 }

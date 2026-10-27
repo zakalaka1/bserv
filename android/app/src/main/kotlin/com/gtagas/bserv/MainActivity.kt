@@ -1,4 +1,4 @@
-package com.example.bserv
+package com.gtagas.bserv
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -2,10 +2,12 @@ plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // Reads android/app/google-services.json into the native Firebase SDKs.
+    id("com.google.gms.google-services")
 }
 
 android {
-    namespace = "com.example.bserv"
+    namespace = "com.gtagas.bserv"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -15,8 +17,10 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.bserv"
+        // Must match the Android app registered in the Firebase project
+        // (bserv-512916) and the generated google-services.json. Changing it
+        // means re-registering the app in Firebase.
+        applicationId = "com.gtagas.bserv"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

@@ -2,10 +2,32 @@
 
 Book Service Flutter app.
 
+## Firebase Environments
+
+The app has two backends, selected at build time by the `USE_FIREBASE_EMULATOR`
+flag (`lib/app/app_environment.dart`):
+
+| Mode                    | Build flag                                      | Backend                       |
+| ----------------------- | ----------------------------------------------- | ----------------------------- |
+| Development (default)   | *(none)*                                        | Local Emulator Suite (`demo-bserv`) |
+| Production              | `--dart-define=USE_FIREBASE_EMULATOR=false`     | Firebase project `bserv-512916` |
+
+The production configuration is committed as `lib/firebase_options.dart`,
+`android/app/google-services.json`, and `ios/Runner/GoogleService-Info.plist`.
+Regenerate it after adding a platform or switching projects with:
+
+```sh
+flutterfire configure --project bserv-512916 --platforms android,ios,web
+```
+
+The Android application id and the iOS bundle id are both `com.gtagas.bserv`.
+They must match the apps registered in the Firebase project, so change the
+project and these ids together.
+
 ## Authentication Development
 
-Authentication, Firestore, and Storage use the separate `demo-bserv` Firebase
-Emulator project. Start the emulators from this directory:
+Development uses the separate `demo-bserv` Emulator project. Start the
+emulators from this directory:
 
 ```sh
 firebase emulators:start --only auth,firestore,storage --project demo-bserv
@@ -13,14 +35,30 @@ firebase emulators:start --only auth,firestore,storage --project demo-bserv
 
 Auth listens on `127.0.0.1:9299`, Firestore on `127.0.0.1:8180`, and Storage
 on `127.0.0.1:9298`. When started together, the Emulator UI is at
-`http://127.0.0.1:4300`. This project remains independent from the
-`demo-gpcore` emulators used by the neighboring Get Parts project.
+`http://127.0.0.1:4300`. The ports can be overridden with
+`FIREBASE_AUTH_EMULATOR_PORT`, `FIREBASE_FIRESTORE_EMULATOR_PORT` and
+`FIREBASE_STORAGE_EMULATOR_PORT`; `FIREBASE_EMULATOR_HOST` overrides the host
+(for example when a physical device reaches the emulators over the local
+network). This project remains independent from the `demo-gpcore` emulators
+used by the neighboring Get Parts project.
 
 Run the Flutter app with `flutter run`. Web and desktop clients connect through
 `127.0.0.1`; the Android emulator connects through `10.0.2.2`. Provider
-sign-in in this setup is for local development only. Before using real Firebase
-projects, configure their platform options and enable Google/Facebook providers
-in Firebase Authentication without committing provider secrets.
+sign-in in this setup is for local development only. To run against the real
+project, build with `--dart-define=USE_FIREBASE_EMULATOR=false` and enable the
+providers in Firebase Authentication; provider secrets are never committed.
+
+Deploy the security rules before using the real project:
+
+```sh
+firebase deploy --only firestore:rules,storage --project bserv-512916
+```
+
+## Continuous Integration
+
+`.github/workflows/ci.yml` runs `dart format --set-exit-if-changed`,
+`flutter analyze`, and `flutter test` on every push to `main` and every pull
+request.
 
 ### Appointment Records
 
