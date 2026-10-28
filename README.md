@@ -261,11 +261,37 @@ WARNING: Your app uses the following plugins that apply Kotlin Gradle Plugin (KG
 Future versions of Flutter will fail to build if your app uses plugins that apply KGP.
 ```
 
-This is a forward-looking notice about Flutter's migration to AGP's Built-in
-Kotlin, not a build error. `android/gradle.properties` still sets
-`android.builtInKotlin=false` (the Flutter 3.47 template default), which makes the
-FlutterFire plugins fall back to `apply plugin: 'kotlin-android'`. It disappears
-once the plugins ship Built-in Kotlin support and the flag is dropped; no action
-is required until a Flutter upgrade makes the warning fatal. See
+and, when Gradle configures the projects directly:
+
+```text
+WARNING: The option setting 'android.builtInKotlin=false' is deprecated.
+WARNING: The option setting 'android.newDsl=false' is deprecated.
+```
+
+Both are forward-looking notices, not build errors. They come from the two flags
+`android/gradle.properties` inherits from the Flutter 3.47 template:
+
+```properties
+android.newDsl=false
+android.builtInKotlin=false
+```
+
+`android.builtInKotlin=false` makes Flutter apply `org.jetbrains.kotlin.android`
+to every Android subproject, which is why the FlutterFire plugins
+(`firebase_auth`, `firebase_core`, `firebase_storage`) are reported as applying
+KGP. AGP 9 deprecates both flags and plans to remove them in AGP 10.
+
+**Do not remove them yet.** Verified against Flutter 3.47.5 + AGP 9.1.0, deleting
+both flags fails the build, because `dev.flutter.flutter-gradle-plugin`
+still casts the Android extension to the legacy `AbstractAppExtension`:
+
+```text
+Failed to apply plugin 'dev.flutter.flutter-gradle-plugin'.
+  > class com.android.build.gradle.internal.dsl.ApplicationExtensionImpl
+    cannot be cast to class com.android.build.gradle.AbstractAppExtension
+```
+
+The flags and the warnings go away together, when a Flutter release ships a
+Gradle plugin that supports AGP's new DSL and Built-in Kotlin. See
 <https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin>.
 
