@@ -1,0 +1,16 @@
+{
+  "name": "bserv-rules-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Emulator-backed tests for the Bserv Firestore and Cloud Storage security rules.",
+  "scripts": {
+    "test": "mocha",
+    "test:emulator": "cd .. && firebase emulators:exec --only firestore,storage --project demo-bserv \"npm --prefix rules-tests test\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
+    "firebase": "^13.1.0",
+    "firebase-tools": "^15.31.0",
+    "mocha": "^12.0.3"
+  }
+}

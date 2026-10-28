@@ -51,3 +51,6 @@ app.*.map.json
 android/key.properties
 *.jks
 *.keystore
+
+# Node tooling for the security-rules tests.
+node_modules/

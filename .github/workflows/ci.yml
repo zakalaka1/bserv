@@ -37,3 +37,38 @@ jobs:
 
       - name: Run tests
         run: flutter test
+
+  rules:
+    name: Security rules
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          # @firebase/rules-unit-testing 6 requires Node >= 24.12.
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: rules-tests/package-lock.json
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install rules test dependencies
+        working-directory: rules-tests
+        run: npm ci
+
+      - name: Cache emulator jars
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ runner.os }}-${{ hashFiles('firebase.json') }}
+
+      - name: Run rules tests
+        working-directory: rules-tests
+        run: npm run test:emulator

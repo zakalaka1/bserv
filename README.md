@@ -92,9 +92,28 @@ and `flutter run` on a device signs with the machine-local debug key instead.
 
 ## Continuous Integration
 
-`.github/workflows/ci.yml` runs `dart format --set-exit-if-changed`,
-`flutter analyze`, and `flutter test` on every push to `main` and every pull
-request.
+`.github/workflows/ci.yml` runs two jobs on every push to `main` and every pull
+request:
+
+- **verify**: `dart format --set-exit-if-changed`, `flutter analyze`, and
+  `flutter test`.
+- **rules**: the Firestore and Cloud Storage security-rules tests against the
+  Emulator Suite.
+
+## Security Rules Tests
+
+`firestore.rules` and `storage.rules` have an emulator-backed suite in
+`rules-tests/` (Mocha plus `@firebase/rules-unit-testing`). Run it with:
+
+```bash
+cd rules-tests
+npm install          # once
+npm run test:emulator
+```
+
+The suite pins the `demo-bserv` project ID, so it can never reach
+`bserv-512916`. See [rules-tests/README.md](rules-tests/README.md) for the
+layout and the conventions the specs follow.
 
 ### Appointment Records
 
