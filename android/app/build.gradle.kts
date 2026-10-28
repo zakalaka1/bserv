@@ -1,9 +1,23 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
     // Reads android/app/google-services.json into the native Firebase SDKs.
     id("com.google.gms.google-services")
+}
+
+// Release signing credentials live in a gitignored file (android/key.properties).
+// On a fresh clone, in CI, or for a contributor without the keystore, the file is
+// absent and the release build falls back to the debug key so that
+// `flutter build apk --release` still works. See README "Release signing".
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+val hasReleaseKeystore = keystorePropertiesFile.exists()
+if (hasReleaseKeystore) {
+    FileInputStream(keystorePropertiesFile).use { keystoreProperties.load(it) }
 }
 
 android {
@@ -33,11 +47,33 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            create("release") {
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                // minSdk is 24, so JAR (v1) signing is not needed; v2 covers every
+                // supported device and v3 keeps APK Signature Scheme key rotation
+                // available. Pinned explicitly so the schemes do not drift with AGP.
+                enableV1Signing = false
+                enableV2Signing = true
+                enableV3Signing = true
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Signs with the upload keystore when android/key.properties is present;
+            // otherwise falls back to the debug key so release builds (and CI) still
+            // work on machines that do not have the keystore.
+            signingConfig = if (hasReleaseKeystore) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }

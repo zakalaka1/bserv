@@ -54,6 +54,42 @@ Deploy the security rules before using the real project:
 firebase deploy --only firestore:rules,storage --project bserv-512916
 ```
 
+## Release Signing
+
+Release builds are signed with the upload keystore at
+`android/app/upload-keystore.jks` (alias `upload`, RSA-2048, valid for 10,000
+days). The credentials are read from `android/key.properties`:
+
+```properties
+storePassword=<random>
+keyPassword=<random>
+keyAlias=upload
+storeFile=upload-keystore.jks
+```
+
+`android/key.properties`, `*.jks`, and `*.keystore` are gitignored, so the key
+never enters the repository; each machine that builds a release needs its own
+copy. When `key.properties` is missing (fresh clone, CI, a contributor without
+the key) `android/app/build.gradle.kts` falls back to the debug key so that
+`flutter build apk --release` still completes.
+
+The upload certificate fingerprints are:
+
+| Algorithm | Fingerprint |
+| --------- | ----------- |
+| SHA-1     | `8E:D4:5D:45:08:7E:A6:E5:87:74:D7:30:11:9A:03:EE:27:50:A7:25` |
+| SHA-256   | `85:0E:C5:B6:0F:78:DC:40:7F:37:4A:3D:23:2C:50:42:A1:1C:BC:7C:12:62:B3:CF:72:2E:89:AF:23:46:83:1C` |
+
+Register them in Firebase (`firebase apps:android:sha:create`, or Project
+settings → Your apps) before enabling Google Sign-In, phone auth, or App Check.
+Those APIs compare the fingerprint of the key that signed the *installed* app,
+and `flutter run` on a device signs with the machine-local debug key instead.
+
+> **Back up `android/app/upload-keystore.jks` and `android/key.properties`** to a
+> password manager or encrypted backup. If the upload key is lost you cannot
+> publish updates to the existing Play Console listing without a key reset
+> request. Never regenerate the keystore once the first release is uploaded.
+
 ## Continuous Integration
 
 `.github/workflows/ci.yml` runs `dart format --set-exit-if-changed`,
@@ -215,3 +251,21 @@ same custom claim only from a privileged server or one-off Admin SDK script.
 Never ship the Admin SDK or service-account credentials in the Flutter app.
 Firebase Security Rules must independently enforce admin permissions; hiding
 admin controls in the UI is not authorization.
+
+## Known Build Warnings
+
+Android release builds print:
+
+```text
+WARNING: Your app uses the following plugins that apply Kotlin Gradle Plugin (KGP): firebase_auth, firebase_core, firebase_storage
+Future versions of Flutter will fail to build if your app uses plugins that apply KGP.
+```
+
+This is a forward-looking notice about Flutter's migration to AGP's Built-in
+Kotlin, not a build error. `android/gradle.properties` still sets
+`android.builtInKotlin=false` (the Flutter 3.47 template default), which makes the
+FlutterFire plugins fall back to `apply plugin: 'kotlin-android'`. It disappears
+once the plugins ship Built-in Kotlin support and the flag is dropped; no action
+is required until a Flutter upgrade makes the warning fatal. See
+<https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin>.
+
