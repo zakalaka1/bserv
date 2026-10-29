@@ -23,7 +23,8 @@ involved.
    accounts, "Generate new private key". Save the JSON *outside* this
    repository, for example `~/.config/bserv/bserv-admin-service-account.json`.
    The key grants project-wide access, so treat it like a password. `.gitignore`
-   already refuses the usual `service-account*.json` names.
+   refuses the usual `service-account*.json` names and Google's generated
+   `<project>-firebase-adminsdk-<hash>.json` name.
 2. **The admin user.** Created in Authentication with the email/password
    provider. The script finds it by `--uid` or `--email`.
 3. **Dependencies.** `npm install` in this directory, once.
