@@ -54,3 +54,9 @@ android/key.properties
 
 # Node tooling for the security-rules tests.
 node_modules/
+
+# Firebase service account keys - never commit these. The admin-claim script
+# reads one from $GOOGLE_APPLICATION_CREDENTIALS or --credential.
+service-account*.json
+*-service-account.json
+*.service-account.json

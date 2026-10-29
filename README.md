@@ -253,23 +253,38 @@ on high-density screens.
 ### Admin Account Provisioning
 
 The Admin Login screen signs in an existing Email/Password account. It does not
-create accounts. To test locally:
+create accounts, and nothing grants the claim automatically. Both rules files and
+the app check for `admin: true`, so an account stays a normal customer account
+until something sets it. The Firebase console has no screen for custom claims,
+which is why `admin-tools/` exists.
 
-1. In the Emulator UI, open Authentication and add an Email/Password user.
-2. Grant that user's UID the custom claim `{ "admin": true }` using the Firebase
-	Admin SDK while connected to the emulator. For Node.js, set
-	`FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9299`, initialize the Admin SDK with
-	project ID `demo-bserv`, look up the user by email, and call
-	`setCustomUserClaims(user.uid, { admin: true })`.
-3. Sign in through Admin Login. The app refreshes the ID token and only exposes
-	admin actions when the token contains the trusted `admin: true` claim.
+```sh
+cd admin-tools && npm install && cd ..
+
+# Emulator: no credentials needed, `emulators:exec` exports the host.
+firebase emulators:exec --only auth --project demo-bserv \
+  "cd admin-tools && node set-admin-claim.js --email admin@example.com --apply"
+
+# Deployed project: service account key kept outside the repository.
+export GOOGLE_APPLICATION_CREDENTIALS=~/.config/bserv/bserv-admin-service-account.json
+node set-admin-claim.js --email admin@example.com          # dry run, writes nothing
+node set-admin-claim.js --email admin@example.com --apply
+node set-admin-claim.js --uid <uid> --revoke --apply
+```
+
+Locally, add the Email/Password user in the Emulator UI (Authentication tab),
+grant the claim, then sign in through Admin Login. The app refreshes the ID token
+and only exposes admin actions when the token contains the trusted `admin: true`
+claim.
 
 For production, enable **Email/Password** in Firebase Authentication and create
-the administrator account through a trusted administrative process. Grant the
-same custom claim only from a privileged server or one-off Admin SDK script.
-Never ship the Admin SDK or service-account credentials in the Flutter app.
-Firebase Security Rules must independently enforce admin permissions; hiding
-admin controls in the UI is not authorization.
+the administrator account, then run the script with a service account key. Never
+ship the Admin SDK or service-account credentials in the Flutter app. Firebase
+Security Rules must independently enforce admin permissions; hiding admin
+controls in the UI is not authorization.
+
+`admin-tools/README.md` documents every flag, including `--revoke` and the
+pinned-project guard.
 
 ## Known Build Warnings
 

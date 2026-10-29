@@ -1,0 +1,12 @@
+{
+  "name": "bserv-admin-tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "One-off administrative tasks for the bserv Firebase project",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}
