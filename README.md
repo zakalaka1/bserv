@@ -12,6 +12,15 @@ flag (`lib/app/app_environment.dart`):
 | Development (default)   | *(none)*                                        | Local Emulator Suite (`demo-bserv`) |
 | Production              | `--dart-define=USE_FIREBASE_EMULATOR=false`     | Firebase project `bserv-512916` |
 
+The flag is a build-time constant, not a runtime switch. A release built without
+it points at a local Emulator Suite that is not running on a user's device, so
+every read fails. Pass it whenever the artifact leaves this machine:
+
+```sh
+flutter build appbundle --release --dart-define=USE_FIREBASE_EMULATOR=false
+flutter build apk --release --dart-define=USE_FIREBASE_EMULATOR=false
+```
+
 The production configuration is committed as `lib/firebase_options.dart`,
 `android/app/google-services.json`, and `ios/Runner/GoogleService-Info.plist`.
 Regenerate it after adding a platform or switching projects with:
@@ -48,11 +57,23 @@ sign-in in this setup is for local development only. To run against the real
 project, build with `--dart-define=USE_FIREBASE_EMULATOR=false` and enable the
 providers in Firebase Authentication; provider secrets are never committed.
 
-Deploy the security rules before using the real project:
+The customer sign-in sheet offers Google and Facebook; the admin screen uses
+Email/Password. The deployed project therefore needs Google and Facebook enabled
+under Authentication, sign-in method, before a customer can sign in at all: every
+rule requires `request.auth != null`, so an unauthenticated client cannot even
+read the service list. Email/Password alone is not enough for customers.
+
+Deploy the security rules and the composite indexes before using the real
+project. The index declared in `firestore.indexes.json` is what makes the
+"latest appointment" query (equal on `userId`, order by `createdAt`) legal;
+without it that query fails in production even though the emulator accepts it:
 
 ```sh
-firebase deploy --only firestore:rules,storage --project bserv-512916
+firebase deploy --only firestore,storage --project bserv-512916
 ```
+
+`firebase firestore:indexes --project bserv-512916` prints what is actually
+deployed.
 
 ## Release Signing
 
@@ -70,8 +91,9 @@ storeFile=upload-keystore.jks
 `android/key.properties`, `*.jks`, and `*.keystore` are gitignored, so the key
 never enters the repository; each machine that builds a release needs its own
 copy. When `key.properties` is missing (fresh clone, CI, a contributor without
-the key) `android/app/build.gradle.kts` falls back to the debug key so that
-`flutter build apk --release` still completes.
+the key) `android/app/build.gradle.kts` falls back to the debug key so that a
+release build still completes. That fallback is why an artifact can build fine
+and still be unusable: check which key signed it before shipping it.
 
 The upload certificate fingerprints are:
 
@@ -80,10 +102,13 @@ The upload certificate fingerprints are:
 | SHA-1     | `8E:D4:5D:45:08:7E:A6:E5:87:74:D7:30:11:9A:03:EE:27:50:A7:25` |
 | SHA-256   | `85:0E:C5:B6:0F:78:DC:40:7F:37:4A:3D:23:2C:50:42:A1:1C:BC:7C:12:62:B3:CF:72:2E:89:AF:23:46:83:1C` |
 
-Register them in Firebase (`firebase apps:android:sha:create`, or Project
-settings → Your apps) before enabling Google Sign-In, phone auth, or App Check.
-Those APIs compare the fingerprint of the key that signed the *installed* app,
-and `flutter run` on a device signs with the machine-local debug key instead.
+Both are registered on the `bserv (android)` app in `bserv-512916`, which is what
+creates the Android OAuth client Google Sign-In needs. Re-register them after a
+key change (`firebase apps:android:sha:create <app id> <sha> --project
+bserv-512916`, or Project settings, Your apps). Those APIs compare the
+fingerprint of the key that signed the *installed* app, and `flutter run` on a
+device signs with the machine-local debug key, so provider sign-in from a debug
+build needs the debug key's fingerprint registered too.
 
 > **Back up `android/app/upload-keystore.jks` and `android/key.properties`** to a
 > password manager or encrypted backup. If the upload key is lost you cannot
