@@ -22,8 +22,9 @@ involved.
 1. **A service account key.** Firebase console, project settings, service
    accounts, "Generate new private key". Save the JSON *outside* this
    repository, for example `~/.config/bserv/bserv-admin-service-account.json`.
-   The key grants project-wide access, so treat it like a password. `.gitignore`
-   refuses the usual `service-account*.json` names and Google's generated
+   The key grants project-wide access, so treat it like a password and keep it
+   `chmod 600`. Google's generated filename works as-is: `.gitignore` refuses
+   both the usual `service-account*.json` names and the generated
    `<project>-firebase-adminsdk-<hash>.json` name.
 2. **The admin user.** Created in Authentication with the email/password
    provider. The script finds it by `--uid` or `--email`.
@@ -72,6 +73,22 @@ Create the user in the emulator first (the Emulator UI at
 `http://127.0.0.1:4300` has an Authentication tab), or with the Admin SDK from a
 throwaway script. This is the same backend `flutter run` uses by default, so
 granting the claim here is what unlocks the admin screens locally.
+
+## This project
+
+The key for `bserv-512916` sits at
+`~/.config/bserv/bserv-512916-firebase-adminsdk-fbsvc-813802b137.json` with mode
+`600`. The admin account is the project's only email/password user, so both
+selectors name the same record:
+
+```sh
+export GOOGLE_APPLICATION_CREDENTIALS=~/.config/bserv/bserv-512916-firebase-adminsdk-fbsvc-813802b137.json
+node set-admin-claim.js --email <admin address>          # dry run
+node set-admin-claim.js --email <admin address> --apply  # grant
+```
+
+Re-running `--apply` on an account that already holds the claim is a no-op: it
+writes the identical claims object and reports `before` and `after` as the same.
 
 ## Notes
 
