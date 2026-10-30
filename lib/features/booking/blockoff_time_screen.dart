@@ -12,6 +12,7 @@ class BlockoffTimeScreen extends StatefulWidget {
     required this.blockedOffTimes,
     required this.bookedSlots,
     required this.onSave,
+    required this.isLeftHanded,
   });
 
   /// Currently blocked-off slots, used to pre-check the boxes.
@@ -27,6 +28,10 @@ class BlockoffTimeScreen extends StatefulWidget {
     Set<String> unblock,
   )
   onSave;
+
+  /// Mirrors each slot row so the checkbox moves to the trailing edge and the
+  /// time-slot label, with any note beneath it, to the leading edge.
+  final bool isLeftHanded;
 
   @override
   State<BlockoffTimeScreen> createState() => _BlockoffTimeScreenState();
@@ -178,6 +183,9 @@ class _BlockoffTimeScreenState extends State<BlockoffTimeScreen> {
                         for (final timeSlot in _BlockoffTimeSlot.values)
                           CheckboxListTile(
                             key: ValueKey('blockoff-slot-${timeSlot.name}'),
+                            controlAffinity: widget.isLeftHanded
+                                ? ListTileControlAffinity.trailing
+                                : ListTileControlAffinity.leading,
                             value: selectedSlots.contains(
                               _slotLabel(localizations, timeSlot),
                             ),

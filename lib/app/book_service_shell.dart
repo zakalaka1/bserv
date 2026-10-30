@@ -428,6 +428,7 @@ class _BookServiceShellState extends State<BookServiceShell> {
           ? BlockoffTimeScreen(
               blockedOffTimes: _blockedOffTimes,
               bookedSlots: _bookedSlots,
+              isLeftHanded: widget.isLeftHanded,
               onSave: (date, block, unblock) async {
                 final messenger = ScaffoldMessenger.of(context);
                 try {

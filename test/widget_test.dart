@@ -402,6 +402,7 @@ void main() {
                 blockedSlots = block;
                 unblockedSlots = unblock;
               },
+              isLeftHanded: false,
             ),
           ),
         ),
@@ -1977,6 +1978,37 @@ void main() {
       tester.getTopRight(details).dx,
       lessThan(tester.getTopLeft(hour).dx),
     );
+  });
+
+  testWidgets('Left-handed mode moves the Block-off checkboxes right', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1100);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpApp(tester, startAsAdmin: true);
+    await tester.tap(find.byKey(const ValueKey('overflow-menu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('menu-item-blockOff')));
+    await tester.pumpAndSettle();
+
+    ListTileControlAffinity? morningCheckbox() => tester
+        .widget<CheckboxListTile>(
+          find.byKey(const ValueKey('blockoff-slot-morning')),
+        )
+        .controlAffinity;
+
+    // Right-handed: the checkbox leads and the time-slot label follows it.
+    expect(morningCheckbox(), ListTileControlAffinity.leading);
+
+    // Left-handed: the checkbox swaps onto the trailing edge, leaving the
+    // time-slot label under the left thumb.
+    await tester.tap(find.byKey(const ValueKey('handedness-toggle')));
+    await tester.pumpAndSettle();
+
+    expect(morningCheckbox(), ListTileControlAffinity.trailing);
   });
 
   testWidgets(
