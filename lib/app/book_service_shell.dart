@@ -418,6 +418,7 @@ class _BookServiceShellState extends State<BookServiceShell> {
               blockedOffTimes: _blockedOffTimes,
               bookedSlots: _bookedSlots,
               initialDate: _reviewDate,
+              isLeftHanded: widget.isLeftHanded,
               onOpenDetails: (date, _) => setState(() {
                 _reviewDate = date;
                 _showReviewDetailsScreen = true;

@@ -1934,6 +1934,51 @@ void main() {
     },
   );
 
+  testWidgets('Left-handed mode swaps the Review slot columns', (tester) async {
+    tester.view.physicalSize = const Size(800, 1100);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    var selectedWeekday = DateUtils.dateOnly(DateTime.now());
+    while (selectedWeekday.weekday > DateTime.friday) {
+      selectedWeekday = selectedWeekday.add(const Duration(days: 1));
+    }
+
+    final appointmentRepository = _TestAppointmentRepository();
+    appointmentRepository.bookedSlots.add(
+      BookedSlot(date: selectedWeekday, timeSlot: '9 am - 11 am'),
+    );
+
+    await _pumpApp(
+      tester,
+      startAsAdmin: true,
+      appointmentRepository: appointmentRepository,
+    );
+    await tester.tap(find.byKey(const ValueKey('overflow-menu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('menu-item-review')));
+    await tester.pumpAndSettle();
+
+    final details = find.byKey(const ValueKey('review-details-morning'));
+    final hour = find.text('9 am - 11 am');
+
+    // Right-handed: the hour label leads and the Details button trails it.
+    expect(
+      tester.getTopRight(hour).dx,
+      lessThan(tester.getTopLeft(details).dx),
+    );
+
+    // Left-handed: the columns swap, putting the button under the left thumb.
+    await tester.tap(find.byKey(const ValueKey('handedness-toggle')));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getTopRight(details).dx,
+      lessThan(tester.getTopLeft(hour).dx),
+    );
+  });
+
   testWidgets(
     'Admin Review details shows the day, slot states, statuses and day steps',
     (tester) async {

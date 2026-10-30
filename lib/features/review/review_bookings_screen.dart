@@ -19,6 +19,7 @@ class ReviewBookingsScreen extends StatefulWidget {
     required this.blockedOffTimes,
     required this.bookedSlots,
     required this.onOpenDetails,
+    required this.isLeftHanded,
     this.initialDate,
   });
 
@@ -30,6 +31,11 @@ class ReviewBookingsScreen extends StatefulWidget {
 
   /// Opens the review details for one customer booking.
   final void Function(DateTime date, String timeSlot) onOpenDetails;
+
+  /// Mirrors each slot row so the Details button moves to the leading edge
+  /// and the hour label to the trailing edge, keeping the actionable control
+  /// under a left thumb.
+  final bool isLeftHanded;
 
   /// The day to open on; defaults to today. The overview is often reopened
   /// after the details screen, which hands back the day last reviewed.
@@ -174,18 +180,34 @@ class _ReviewBookingsScreenState extends State<ReviewBookingsScreen> {
     final label = _slotLabel(localizations, timeSlot);
     final isBlocked = blockedSlots.contains(label);
     final isBooked = customerBooked.contains(label);
+    final detailsButton = isBooked
+        ? FilledButton.tonal(
+            key: ValueKey('review-details-${timeSlot.name}'),
+            onPressed: () => widget.onOpenDetails(_selectedDate, label),
+            child: Text(localizations.details),
+          )
+        : null;
+
+    if (widget.isLeftHanded) {
+      // Left-handed: swap the two columns so the button sits on the leading
+      // edge and the hour label, with any blocked-off note beneath it, runs
+      // out to the trailing edge.
+      return ListTile(
+        key: ValueKey('review-slot-${timeSlot.name}'),
+        leading: detailsButton,
+        title: Text(label, textAlign: TextAlign.end),
+        subtitle: isBlocked
+            ? Text(localizations.blockedOffStatus, textAlign: TextAlign.end)
+            : null,
+        contentPadding: const EdgeInsetsDirectional.only(start: 16, end: 16),
+      );
+    }
 
     return ListTile(
       key: ValueKey('review-slot-${timeSlot.name}'),
       title: Text(label),
       subtitle: isBlocked ? Text(localizations.blockedOffStatus) : null,
-      trailing: isBooked
-          ? FilledButton.tonal(
-              key: ValueKey('review-details-${timeSlot.name}'),
-              onPressed: () => widget.onOpenDetails(_selectedDate, label),
-              child: Text(localizations.details),
-            )
-          : null,
+      trailing: detailsButton,
       contentPadding: const EdgeInsetsDirectional.only(start: 16, end: 16),
     );
   }
