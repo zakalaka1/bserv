@@ -12,7 +12,20 @@
           "package_name": "com.gtagas.bserv"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "181821889100-3kjbh4q10h05h15m362p0jlhvdkpfv29.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gtagas.bserv",
+            "certificate_hash": "8ed45d45087ea6e58774d730119a03ee2750a725"
+          }
+        },
+        {
+          "client_id": "181821889100-2m6dp5pmp728nbp0t1uvp5asi11bmijc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA1Y_0Z9qLlnn4v-E8yfgyGGxV5HMkhBS0"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "181821889100-2m6dp5pmp728nbp0t1uvp5asi11bmijc.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "181821889100-gn23hg6heupmn6ifb1mkr7et5q0orshr.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.gtagas.bserv"
+              }
+            }
+          ]
         }
       }
     }
