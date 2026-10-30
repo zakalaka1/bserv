@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Resources the release build must not shrink away.
+
+  R8's resource shrinker keeps only resources it can see referenced from code.
+  Firebase reads `default_web_client_id` out of the merged resources by name at
+  runtime (Resources.getIdentifier) rather than through a compiled R reference,
+  so the shrinker files it under "is not reachable" and deletes it. The value
+  comes from android/app/google-services.json, where it is the OAuth web client
+  created when the Google sign-in provider is enabled.
+
+  Without this keep rule, `signInWithProvider(GoogleAuthProvider())` fails on a
+  release build with a developer-error API exception, even though debug builds
+  and every Firebase console setting look correct.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@string/default_web_client_id" />

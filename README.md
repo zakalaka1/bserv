@@ -33,6 +33,21 @@ The Android application id and the iOS bundle id are both `com.gtagas.bserv`.
 They must match the apps registered in the Firebase project, so change the
 project and these ids together.
 
+`google-services.json` also carries the OAuth clients that enabling a sign-in
+provider creates, so re-download it after enabling one and commit the
+replacement; the file predating the Google provider had an empty `oauth_client`
+array.
+
+### The one resource that must not be shrunk
+
+Release builds shrink resources, and Firebase looks `default_web_client_id` up
+by name at runtime instead of through a compiled `R` reference, so the shrinker
+deletes it as unreachable. `android/app/src/main/res/raw/keep.xml` pins it.
+`build/app/outputs/mapping/release/resources.txt` records what the shrinker
+removed; a release build missing that string fails Google sign-in with a
+developer-error API exception while debug builds and the Firebase console both
+look correct.
+
 ## Authentication Development
 
 Development uses the separate `demo-bserv` Emulator project. Start the
