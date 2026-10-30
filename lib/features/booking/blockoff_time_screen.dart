@@ -29,8 +29,9 @@ class BlockoffTimeScreen extends StatefulWidget {
   )
   onSave;
 
-  /// Mirrors each slot row so the checkbox moves to the trailing edge and the
-  /// time-slot label, with any note beneath it, to the leading edge.
+  /// Mirrors each slot row so the checkbox tracks the dominant hand: the
+  /// leading edge in left-handed mode, under the left thumb, and the trailing
+  /// edge otherwise, matching the Review screen's Details button.
   final bool isLeftHanded;
 
   @override
@@ -184,8 +185,8 @@ class _BlockoffTimeScreenState extends State<BlockoffTimeScreen> {
                           CheckboxListTile(
                             key: ValueKey('blockoff-slot-${timeSlot.name}'),
                             controlAffinity: widget.isLeftHanded
-                                ? ListTileControlAffinity.trailing
-                                : ListTileControlAffinity.leading,
+                                ? ListTileControlAffinity.leading
+                                : ListTileControlAffinity.trailing,
                             value: selectedSlots.contains(
                               _slotLabel(localizations, timeSlot),
                             ),

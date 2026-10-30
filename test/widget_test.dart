@@ -1980,7 +1980,7 @@ void main() {
     );
   });
 
-  testWidgets('Left-handed mode moves the Block-off checkboxes right', (
+  testWidgets('Left-handed mode moves the Block-off checkbox under the thumb', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(800, 1100);
@@ -1994,21 +1994,26 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('menu-item-blockOff')));
     await tester.pumpAndSettle();
 
-    ListTileControlAffinity? morningCheckbox() => tester
-        .widget<CheckboxListTile>(
-          find.byKey(const ValueKey('blockoff-slot-morning')),
-        )
-        .controlAffinity;
+    final tile = find.byKey(const ValueKey('blockoff-slot-morning'));
+    final morning = find.text('9 am - 11 am');
 
-    // Right-handed: the checkbox leads and the time-slot label follows it.
-    expect(morningCheckbox(), ListTileControlAffinity.leading);
+    ListTileControlAffinity? affinity() =>
+        tester.widget<CheckboxListTile>(tile).controlAffinity;
+    Rect checkbox() => tester.getRect(
+      find.descendant(of: tile, matching: find.byType(Checkbox)),
+    );
 
-    // Left-handed: the checkbox swaps onto the trailing edge, leaving the
-    // time-slot label under the left thumb.
+    // Right-handed: the checkbox trails, under a right thumb.
+    expect(affinity(), ListTileControlAffinity.trailing);
+    expect(checkbox().left, greaterThan(tester.getRect(morning).right));
+
+    // Left-handed: the checkbox leads, like the Review screen's Details
+    // button, putting the actionable control under a left thumb.
     await tester.tap(find.byKey(const ValueKey('handedness-toggle')));
     await tester.pumpAndSettle();
 
-    expect(morningCheckbox(), ListTileControlAffinity.trailing);
+    expect(affinity(), ListTileControlAffinity.leading);
+    expect(checkbox().right, lessThan(tester.getRect(morning).left));
   });
 
   testWidgets(
