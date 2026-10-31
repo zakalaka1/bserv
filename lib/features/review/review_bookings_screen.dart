@@ -58,8 +58,20 @@ class _ReviewBookingsScreenState extends State<ReviewBookingsScreen> {
     _selectedDate = _nearestSelectableDate(widget.initialDate ?? _today);
   }
 
-  bool _isSelectableDate(DateTime date) =>
-      BookingSchedule.isWorkingDate(DateUtils.dateOnly(date), today: _today);
+  /// Whether the overview may open [date]: a working day, or any day that
+  /// already holds a booking or block-off.
+  ///
+  /// Days with reservations stay selectable even when they are no longer in
+  /// [BookingSchedule.workingWeekdays], so appointments booked before the
+  /// working week was shortened or shifted remain reachable for review.
+  bool _isSelectableDate(
+    DateTime date, {
+    Set<DateTime> reservedDays = const {},
+  }) {
+    final day = DateUtils.dateOnly(date);
+    if (BookingSchedule.isWorkingDate(day, today: _today)) return true;
+    return reservedDays.contains(day);
+  }
 
   /// Clamps [date] into the calendar's range and moves it to the nearest
   /// selectable working day, so the initial date is always valid.
@@ -114,6 +126,17 @@ class _ReviewBookingsScreenState extends State<ReviewBookingsScreen> {
                   slot.timeSlot,
             };
 
+            // Every day that already holds a reservation. The calendar offers
+            // these in addition to working days so a booking is never stranded
+            // on a day the working week no longer covers.
+            final reservedDays = <DateTime>{
+              for (final entry
+                  in blockedSnapshot.data ?? const <BlockedOffTime>[])
+                DateUtils.dateOnly(entry.date),
+              for (final slot in bookedSnapshot.data ?? const <BookedSlot>[])
+                DateUtils.dateOnly(slot.date),
+            };
+
             return SafeArea(
               child: Center(
                 child: SingleChildScrollView(
@@ -135,7 +158,11 @@ class _ReviewBookingsScreenState extends State<ReviewBookingsScreen> {
                                 _today,
                               ),
                               currentDate: _today,
-                              selectableDayPredicate: _isSelectableDate,
+                              selectableDayPredicate: (date) =>
+                                  _isSelectableDate(
+                                    date,
+                                    reservedDays: reservedDays,
+                                  ),
                               onDateChanged: (date) =>
                                   setState(() => _selectedDate = date),
                             ),

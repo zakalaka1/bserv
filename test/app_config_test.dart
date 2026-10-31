@@ -3,110 +3,205 @@ import 'package:bserv/features/service_area/service_area_map.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  // 2026-10-19 is a Monday.
-  final monday = DateTime(2026, 10, 19);
-  final saturday = DateTime(2026, 10, 24);
-  final sunday = DateTime(2026, 10, 25);
+  // A fixed Monday anchor. The rules below are checked against whatever
+  // `BookingSchedule.workingWeekdays` configures, so changing the working week
+  // does not require updating these tests.
+  final anchor = DateTime(2026, 10, 19);
 
-  test('customers cannot book before the minimum lead time', () {
-    expect(BookingSchedule.minimumLeadDays, 2);
-    expect(BookingSchedule.isBookableDate(monday, today: monday), isFalse);
+  DateTime addDays(DateTime date, int days) =>
+      DateTime(date.year, date.month, date.day + days);
+
+  bool isWorking(DateTime date) =>
+      BookingSchedule.workingWeekdays.contains(date.weekday);
+
+  /// [count] consecutive dates from [anchor], each with its day offset.
+  List<({int offset, DateTime date})> datesFromAnchor([int count = 14]) => [
+    for (var offset = 0; offset < count; offset++)
+      (offset: offset, date: addDays(anchor, offset)),
+  ];
+
+  test('the schedule configuration is valid', () {
+    expect(BookingSchedule.workingWeekdays, isNotEmpty);
     expect(
-      BookingSchedule.isBookableDate(DateTime(2026, 10, 20), today: monday),
-      isFalse,
+      BookingSchedule.workingWeekdays.length,
+      lessThan(7),
+      reason: 'the working week must leave at least one day out',
     );
-    expect(
-      BookingSchedule.isBookableDate(DateTime(2026, 10, 21), today: monday),
-      isTrue,
-    );
+    for (final weekday in BookingSchedule.workingWeekdays) {
+      expect(
+        weekday,
+        inInclusiveRange(DateTime.monday, DateTime.sunday),
+        reason: 'weekday $weekday',
+      );
+    }
+    expect(BookingSchedule.minimumLeadDays, greaterThanOrEqualTo(0));
+    expect(BookingSchedule.cancellationLeadWorkdays, greaterThan(0));
+    expect(BookingSchedule.monthsAhead, greaterThan(0));
+  });
+
+  test('a date is a working date exactly when its weekday is configured', () {
+    for (final entry in datesFromAnchor()) {
+      expect(
+        BookingSchedule.isWorkingDate(entry.date, today: anchor),
+        isWorking(entry.date),
+        reason: '${entry.date} (weekday ${entry.date.weekday})',
+      );
+    }
   });
 
   test('the admin can still block off today and tomorrow', () {
-    expect(BookingSchedule.isWorkingDate(monday, today: monday), isTrue);
-    expect(
-      BookingSchedule.isWorkingDate(DateTime(2026, 10, 20), today: monday),
-      isTrue,
-    );
+    // The lead time only holds customers back; it never closes the admin's
+    // calendar, on any weekday.
+    for (final entry in datesFromAnchor(BookingSchedule.minimumLeadDays + 1)) {
+      expect(
+        BookingSchedule.isWorkingDate(entry.date, today: anchor),
+        isWorking(entry.date),
+        reason: '${entry.date} (weekday ${entry.date.weekday})',
+      );
+    }
   });
 
-  test('weekends are never bookable', () {
-    expect(BookingSchedule.isBookableDate(saturday, today: monday), isFalse);
-    expect(BookingSchedule.isBookableDate(sunday, today: monday), isFalse);
+  test('customers cannot book before the minimum lead time', () {
+    expect(BookingSchedule.minimumLeadDays, greaterThanOrEqualTo(0));
+    for (final entry in datesFromAnchor()) {
+      expect(
+        BookingSchedule.isBookableDate(entry.date, today: anchor),
+        isWorking(entry.date) &&
+            entry.offset >= BookingSchedule.minimumLeadDays,
+        reason: '${entry.date} (weekday ${entry.date.weekday})',
+      );
+    }
+  });
+
+  test('days outside the working week are never bookable', () {
+    final daysOff = datesFromAnchor(28)
+        .where((entry) => !isWorking(entry.date))
+        .toList();
+    expect(
+      daysOff,
+      isNotEmpty,
+      reason: 'the working week must leave at least one day out',
+    );
+    for (final entry in daysOff) {
+      expect(
+        BookingSchedule.isBookableDate(entry.date, today: anchor),
+        isFalse,
+        reason: '${entry.date} (weekday ${entry.date.weekday})',
+      );
+    }
   });
 
   test('past dates and dates beyond the booking window are not bookable', () {
     expect(
-      BookingSchedule.isWorkingDate(DateTime(2026, 10, 16), today: monday),
+      BookingSchedule.isWorkingDate(addDays(anchor, -1), today: anchor),
       isFalse,
     );
-    final last = BookingSchedule.lastBookableDate(monday);
+
+    final last = BookingSchedule.lastBookableDate(anchor);
     expect(
       last,
       DateTime(
-        monday.year,
-        monday.month + BookingSchedule.monthsAhead,
-        monday.day,
+        anchor.year,
+        anchor.month + BookingSchedule.monthsAhead,
+        anchor.day,
       ),
     );
-    expect(
-      BookingSchedule.isWorkingDate(
-        last.add(const Duration(days: 1)),
-        today: monday,
-      ),
-      isFalse,
-    );
+
+    // The first configured working day past the window is still outside it.
+    var beyond = addDays(last, 1);
+    while (!isWorking(beyond)) {
+      beyond = addDays(beyond, 1);
+    }
+    expect(BookingSchedule.isWorkingDate(beyond, today: anchor), isFalse);
+    expect(BookingSchedule.isBookableDate(beyond, today: anchor), isFalse);
   });
 
-  test('firstBookableDate is the day after tomorrow, skipping weekends', () {
-    expect(BookingSchedule.firstBookableDate(monday), DateTime(2026, 10, 21));
-    // Thursday + 2 days is Saturday, so the next working day is Monday.
-    expect(
-      BookingSchedule.firstBookableDate(DateTime(2026, 10, 22)),
-      DateTime(2026, 10, 26),
-    );
-    expect(BookingSchedule.firstBookableDate(saturday), DateTime(2026, 10, 26));
-    expect(BookingSchedule.firstBookableDate(sunday), DateTime(2026, 10, 27));
+  test('firstWorkingDate is the next configured working day', () {
+    for (final entry in datesFromAnchor()) {
+      final first = BookingSchedule.firstWorkingDate(entry.date);
+      expect(first.isBefore(entry.date), isFalse, reason: '${entry.date}');
+      expect(isWorking(first), isTrue, reason: '$first');
+      expect(first.difference(entry.date).inDays, lessThan(7));
+    }
   });
 
-  test('firstWorkingDate skips only the weekend', () {
-    expect(BookingSchedule.firstWorkingDate(monday), monday);
-    expect(BookingSchedule.firstWorkingDate(saturday), DateTime(2026, 10, 26));
+  test('firstBookableDate is the earliest bookable day on or after today', () {
+    for (final entry in datesFromAnchor()) {
+      final first = BookingSchedule.firstBookableDate(entry.date);
+      expect(
+        BookingSchedule.isBookableDate(first, today: entry.date),
+        isTrue,
+        reason: '$first',
+      );
+      for (var day = entry.date; day.isBefore(first); day = addDays(day, 1)) {
+        expect(
+          BookingSchedule.isBookableDate(day, today: entry.date),
+          isFalse,
+          reason: '$day comes before $first',
+        );
+      }
+    }
   });
 
-  test('the cancellation deadline counts back three working days', () {
-    expect(BookingSchedule.cancellationLeadWorkdays, 3);
-    // Monday: Fri, Thu, Wed of the previous week.
-    expect(
-      BookingSchedule.cancellationDeadline(monday),
-      DateTime(2026, 10, 14),
-    );
-    // Tuesday: Mon, Fri, Thu (the weekend is skipped).
-    expect(
-      BookingSchedule.cancellationDeadline(DateTime(2026, 10, 20)),
-      DateTime(2026, 10, 15),
-    );
-    // Thursday: Wed, Tue, Mon.
-    expect(
-      BookingSchedule.cancellationDeadline(DateTime(2026, 10, 22)),
-      DateTime(2026, 10, 19),
-    );
+  test('the cancellation deadline counts back the configured working days', () {
+    expect(BookingSchedule.cancellationLeadWorkdays, greaterThan(0));
+    for (final entry in datesFromAnchor()) {
+      final deadline = BookingSchedule.cancellationDeadline(entry.date);
+      expect(
+        deadline.isAfter(entry.date),
+        isFalse,
+        reason: '${entry.date} -> $deadline',
+      );
+      expect(isWorking(deadline), isTrue, reason: '$deadline');
+
+      // Exactly `cancellationLeadWorkdays` working days sit in
+      // [deadline, appointment), and the deadline is the earliest of them.
+      var workingDays = 0;
+      for (
+        var day = deadline;
+        day.isBefore(entry.date);
+        day = addDays(day, 1)
+      ) {
+        if (isWorking(day)) workingDays++;
+      }
+      expect(
+        workingDays,
+        BookingSchedule.cancellationLeadWorkdays,
+        reason: '${entry.date} -> $deadline',
+      );
+    }
   });
 
   test('cancelling is allowed up to and including the deadline', () {
-    expect(BookingSchedule.isCancellableOn(monday, today: monday), isFalse);
-    expect(
-      BookingSchedule.isCancellableOn(monday, today: DateTime(2026, 10, 14)),
-      isTrue,
-    );
-    expect(
-      BookingSchedule.isCancellableOn(monday, today: DateTime(2026, 10, 16)),
-      isFalse,
-    );
-    // A date already in the past cannot be cancelled either.
-    expect(
-      BookingSchedule.isCancellableOn(DateTime(2026, 10, 12), today: monday),
-      isFalse,
-    );
+    for (final entry in datesFromAnchor()) {
+      final deadline = BookingSchedule.cancellationDeadline(entry.date);
+      expect(
+        BookingSchedule.isCancellableOn(entry.date, today: deadline),
+        isTrue,
+        reason: '${entry.date} at its deadline',
+      );
+      expect(
+        BookingSchedule.isCancellableOn(
+          entry.date,
+          today: addDays(deadline, 1),
+        ),
+        isFalse,
+        reason: '${entry.date} one day late',
+      );
+      expect(
+        BookingSchedule.isCancellableOn(
+          entry.date,
+          today: addDays(deadline, -1),
+        ),
+        isTrue,
+        reason: '${entry.date} one day early',
+      );
+      expect(
+        BookingSchedule.isCancellableOn(entry.date, today: entry.date),
+        isFalse,
+        reason: '${entry.date} on the day',
+      );
+    }
   });
 
   test(

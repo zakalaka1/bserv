@@ -38,8 +38,8 @@ class _BookingCalendarScreenState extends State<BookingCalendarScreen> {
   void initState() {
     super.initState();
     // Default to the earliest bookable date (today + minimumLeadDays, skipping
-    // weekends) so the highlighted calendar day and its available time slots
-    // are both ready without requiring an extra tap.
+    // non-working days) so the highlighted calendar day and its available time
+    // slots are both ready without requiring an extra tap.
     _selectedDate =
         widget.initialDate ?? BookingSchedule.firstBookableDate(_today);
     for (final slot in _BookingTimeSlot.values) {

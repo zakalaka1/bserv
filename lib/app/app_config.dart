@@ -6,6 +6,10 @@
 /// Which days customers can book and how far ahead.
 abstract final class BookingSchedule {
   /// Days of the week the service operates (`DateTime.monday` is 1 ... `sunday` is 7).
+  ///
+  /// This is the only place the working week is set: add or remove a weekday to
+  /// widen, shorten or shift it. Every calendar, booking and cancellation rule
+  /// follows this set, so leave at least one day out.
   static const Set<int> workingWeekdays = {
     DateTime.monday,
     DateTime.tuesday,
@@ -22,7 +26,8 @@ abstract final class BookingSchedule {
   static const int minimumLeadDays = 2;
 
   /// Customers may cancel no later than this many working days before the
-  /// appointment date. Weekends are skipped when counting back.
+  /// appointment date. Days outside [workingWeekdays] are skipped when counting
+  /// back.
   static const int cancellationLeadWorkdays = 3;
 
   static DateTime lastBookableDate(DateTime today) =>

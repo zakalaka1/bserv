@@ -289,6 +289,17 @@ DateTime _workingDateAhead(int workdaysAhead) {
   return date;
 }
 
+/// The first date on or after [from] whose weekday is not in
+/// [BookingSchedule.workingWeekdays]. A valid working week leaves at least one
+/// day out, so this is always within the next week.
+DateTime _nextNonWorkingDate(DateTime from) {
+  var date = DateUtils.dateOnly(from);
+  while (BookingSchedule.workingWeekdays.contains(date.weekday)) {
+    date = DateUtils.addDaysToDate(date, 1);
+  }
+  return date;
+}
+
 AppointmentRecord _latestAppointment({
   required DateTime appointmentDate,
   String status = 'scheduled',
@@ -379,7 +390,7 @@ void main() {
     Set<String>? blockedSlots;
     Set<String>? unblockedSlots;
     var selectedWeekday = DateUtils.dateOnly(DateTime.now());
-    while (selectedWeekday.weekday > DateTime.friday) {
+    while (!BookingSchedule.workingWeekdays.contains(selectedWeekday.weekday)) {
       selectedWeekday = selectedWeekday.add(const Duration(days: 1));
     }
     final navigator = tester.state<NavigatorState>(
@@ -1137,11 +1148,8 @@ void main() {
     final calendar = tester.widget<CalendarDatePicker>(calendarFinder);
     expect(calendar.selectableDayPredicate!(nextAvailableDate), isTrue);
 
-    var nextSunday = now;
-    while (nextSunday.weekday != DateTime.sunday) {
-      nextSunday = nextSunday.add(const Duration(days: 1));
-    }
-    expect(calendar.selectableDayPredicate!(nextSunday), isFalse);
+    // A day the working week does not cover is never bookable.
+    expect(calendar.selectableDayPredicate!(_nextNonWorkingDate(now)), isFalse);
     // The highlighted day defaults to the earliest bookable date, and its
     // available slots are loaded without the customer tapping the date first.
     expect(
@@ -1797,7 +1805,9 @@ void main() {
       );
 
       var selectedWeekday = DateUtils.dateOnly(DateTime.now());
-      while (selectedWeekday.weekday > DateTime.friday) {
+      while (!BookingSchedule.workingWeekdays.contains(
+        selectedWeekday.weekday,
+      )) {
         selectedWeekday = selectedWeekday.add(const Duration(days: 1));
       }
       tester
@@ -1865,7 +1875,9 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       var selectedWeekday = DateUtils.dateOnly(DateTime.now());
-      while (selectedWeekday.weekday > DateTime.friday) {
+      while (!BookingSchedule.workingWeekdays.contains(
+        selectedWeekday.weekday,
+      )) {
         selectedWeekday = selectedWeekday.add(const Duration(days: 1));
       }
 
@@ -1935,6 +1947,48 @@ void main() {
     },
   );
 
+  testWidgets(
+    'Review still opens bookings on a day the working week no longer covers',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1100);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final today = DateUtils.dateOnly(DateTime.now());
+      final dayOff = _nextNonWorkingDate(today);
+      final laterDayOff = _nextNonWorkingDate(
+        DateUtils.addDaysToDate(dayOff, 1),
+      );
+
+      final appointmentRepository = _TestAppointmentRepository();
+      appointmentRepository.bookedSlots.add(
+        BookedSlot(date: dayOff, timeSlot: '9 am - 11 am'),
+      );
+
+      await _pumpApp(
+        tester,
+        startAsAdmin: true,
+        appointmentRepository: appointmentRepository,
+      );
+      await tester.tap(find.byKey(const ValueKey('overflow-menu')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('menu-item-review')));
+      await tester.pumpAndSettle();
+
+      final calendar = tester.widget<CalendarDatePicker>(
+        find.byKey(const ValueKey('review-calendar')),
+      );
+
+      // The day is outside the configured working week...
+      expect(BookingSchedule.workingWeekdays.contains(dayOff.weekday), isFalse);
+      // ...but its booking keeps it reachable for review.
+      expect(calendar.selectableDayPredicate!(dayOff), isTrue);
+      // A day off with nothing booked stays closed.
+      expect(calendar.selectableDayPredicate!(laterDayOff), isFalse);
+    },
+  );
+
   testWidgets('Left-handed mode swaps the Review slot columns', (tester) async {
     tester.view.physicalSize = const Size(800, 1100);
     tester.view.devicePixelRatio = 1;
@@ -1942,7 +1996,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     var selectedWeekday = DateUtils.dateOnly(DateTime.now());
-    while (selectedWeekday.weekday > DateTime.friday) {
+    while (!BookingSchedule.workingWeekdays.contains(selectedWeekday.weekday)) {
       selectedWeekday = selectedWeekday.add(const Duration(days: 1));
     }
 
@@ -2025,7 +2079,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       var workday = DateUtils.dateOnly(DateTime.now());
-      while (workday.weekday > DateTime.friday) {
+      while (!BookingSchedule.workingWeekdays.contains(workday.weekday)) {
         workday = workday.add(const Duration(days: 1));
       }
       final nextDay = DateUtils.addDaysToDate(workday, 1);
@@ -2182,7 +2236,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     var workday = DateUtils.dateOnly(DateTime.now());
-    while (workday.weekday > DateTime.friday) {
+    while (!BookingSchedule.workingWeekdays.contains(workday.weekday)) {
       workday = workday.add(const Duration(days: 1));
     }
 
@@ -2246,7 +2300,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     var workday = DateUtils.dateOnly(DateTime.now());
-    while (workday.weekday > DateTime.friday) {
+    while (!BookingSchedule.workingWeekdays.contains(workday.weekday)) {
       workday = DateUtils.addDaysToDate(workday, 1);
     }
 
@@ -2312,7 +2366,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     var workday = DateUtils.dateOnly(DateTime.now());
-    while (workday.weekday > DateTime.friday) {
+    while (!BookingSchedule.workingWeekdays.contains(workday.weekday)) {
       workday = DateUtils.addDaysToDate(workday, 1);
     }
 
@@ -2383,7 +2437,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     var workday = DateUtils.dateOnly(DateTime.now());
-    while (workday.weekday > DateTime.friday) {
+    while (!BookingSchedule.workingWeekdays.contains(workday.weekday)) {
       workday = DateUtils.addDaysToDate(workday, 1);
     }
 
@@ -2455,7 +2509,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       var workday = DateUtils.dateOnly(DateTime.now());
-      while (workday.weekday > DateTime.friday) {
+      while (!BookingSchedule.workingWeekdays.contains(workday.weekday)) {
         workday = workday.add(const Duration(days: 1));
       }
 
