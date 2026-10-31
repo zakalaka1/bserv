@@ -9,8 +9,14 @@ class FirebaseAuthGateway implements AuthGateway {
   final FirebaseAuth _auth;
 
   @override
-  AuthState get currentState =>
-      AuthState(isAuthenticated: _auth.currentUser != null, isAdmin: false);
+  AuthState get currentState {
+    final user = _auth.currentUser;
+    return AuthState(
+      isAuthenticated: user != null,
+      isAdmin: false,
+      userId: user?.uid,
+    );
+  }
 
   @override
   Stream<AuthState> get authStateChanges => _auth.idTokenChanges().asyncMap(
@@ -53,6 +59,7 @@ class FirebaseAuthGateway implements AuthGateway {
     return AuthState(
       isAuthenticated: true,
       isAdmin: token.claims?['admin'] == true,
+      userId: user.uid,
     );
   }
 

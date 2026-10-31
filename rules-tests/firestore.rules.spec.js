@@ -786,6 +786,74 @@ describe('bookedSlots', () => {
   });
 });
 
+describe('userSettings', () => {
+  const settingsPath = (uid) => `userSettings/${uid}`;
+
+  /** A settings document as written by `saveUserSettings`. */
+  function settingsData(overrides = {}) {
+    return { leftHanded: true, themeMode: 'dark', ...overrides };
+  }
+
+  it('lets a user read and write their own settings', async () => {
+    const db = userDb(ALICE);
+
+    await assertSucceeds(setDoc(doc(db, settingsPath(ALICE)), settingsData()));
+    await assertSucceeds(getDoc(doc(db, settingsPath(ALICE))));
+  });
+
+  it('accepts every theme mode the app can store', async () => {
+    const db = userDb(ALICE);
+
+    for (const themeMode of ['system', 'light', 'dark']) {
+      await assertSucceeds(
+        setDoc(doc(db, settingsPath(ALICE)), settingsData({ themeMode })),
+      );
+    }
+  });
+
+  it('refuses settings the app never writes', async () => {
+    const db = userDb(ALICE);
+
+    await assertFails(
+      setDoc(doc(db, settingsPath(ALICE)), settingsData({ leftHanded: 'yes' })),
+    );
+    await assertFails(
+      setDoc(doc(db, settingsPath(ALICE)), settingsData({ themeMode: 'sepia' })),
+    );
+    await assertFails(
+      setDoc(doc(db, settingsPath(ALICE)), settingsData({ extra: true })),
+    );
+    await assertFails(
+      setDoc(doc(db, settingsPath(ALICE)), { leftHanded: true }),
+    );
+  });
+
+  it("refuses another user's settings", async () => {
+    await seedDocuments({ [settingsPath(ALICE)]: settingsData() });
+
+    await assertFails(getDoc(doc(userDb(BOB), settingsPath(ALICE))));
+    await assertFails(
+      setDoc(doc(userDb(BOB), settingsPath(ALICE)), settingsData()),
+    );
+  });
+
+  it('hides settings from anonymous visitors', async () => {
+    await seedDocuments({ [settingsPath(ALICE)]: settingsData() });
+    const db = anonDb();
+
+    await assertFails(getDoc(doc(db, settingsPath(ALICE))));
+    await assertFails(getDocs(collection(db, 'userSettings')));
+    await assertFails(setDoc(doc(db, settingsPath(ALICE)), settingsData()));
+  });
+
+  it('refuses deleting a settings document', async () => {
+    await seedDocuments({ [settingsPath(ALICE)]: settingsData() });
+
+    await assertFails(deleteDoc(doc(userDb(ALICE), settingsPath(ALICE))));
+    await assertFails(deleteDoc(doc(adminDb(), settingsPath(ALICE))));
+  });
+});
+
 describe('the admin claim', () => {
   it('only accepts the boolean true value', async () => {
     const falseClaim = testEnv

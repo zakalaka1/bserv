@@ -3,6 +3,7 @@ import 'package:bserv/app/book_service_app.dart';
 import 'package:bserv/data/appointments/appointment_repository.dart';
 import 'package:bserv/data/content/business_content_repository.dart';
 import 'package:bserv/data/content/work_notes_repository.dart';
+import 'package:bserv/data/user/user_settings_repository.dart';
 import 'package:bserv/services/auth_gateway.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -15,19 +16,28 @@ import 'package:bserv/features/service_area/service_area_map.dart';
 
 import 'dart:async';
 
+/// The id `_TestAuthGateway` reports for every signed-in test user.
+const _testUserId = 'test-user-uid';
+
 class _TestAuthGateway implements AuthGateway {
   _TestAuthGateway({
     this.adminClaim = false,
     bool startAsAdmin = false,
     bool startAsAuthenticated = false,
     this.adminSignInError,
-  }) : _state = AuthState(
+    String? userId,
+  }) : userId = userId ?? _testUserId,
+       _state = AuthState(
          isAuthenticated: startAsAdmin || startAsAuthenticated,
          isAdmin: startAsAdmin,
+         userId: startAsAdmin || startAsAuthenticated
+             ? userId ?? _testUserId
+             : null,
        );
 
   final bool adminClaim;
   final Object? adminSignInError;
+  final String userId;
   AuthState _state;
   final _authStateController = StreamController<AuthState>.broadcast();
 
@@ -63,7 +73,11 @@ class _TestAuthGateway implements AuthGateway {
   Future<void> signOut() async => _setAuthenticated(false);
 
   Future<void> _setAuthenticated(bool value, {bool isAdmin = false}) async {
-    _state = AuthState(isAuthenticated: value, isAdmin: value && isAdmin);
+    _state = AuthState(
+      isAuthenticated: value,
+      isAdmin: value && isAdmin,
+      userId: value ? userId : null,
+    );
     _authStateController.add(_state);
   }
 
@@ -234,6 +248,30 @@ class _TestWorkNotesRepository implements WorkNotesRepository {
   Future<void> dispose() => _controller.close();
 }
 
+class _TestUserSettingsRepository implements UserSettingsRepository {
+  _TestUserSettingsRepository({Map<String, UserSettings> stored = const {}})
+    : _stored = {...stored};
+
+  final Map<String, UserSettings> _stored;
+  final List<({String userId, UserSettings settings})> saves = [];
+
+  UserSettings? savedSettingsFor(String userId) => _stored[userId];
+
+  @override
+  Stream<UserSettings> watchUserSettings({required String userId}) {
+    return Stream.value(_stored[userId] ?? UserSettings.defaults);
+  }
+
+  @override
+  Future<void> saveUserSettings({
+    required String userId,
+    required UserSettings settings,
+  }) async {
+    saves.add((userId: userId, settings: settings));
+    _stored[userId] = settings;
+  }
+}
+
 Future<_TestAuthGateway> _pumpApp(
   WidgetTester tester, {
   bool adminClaim = false,
@@ -243,6 +281,7 @@ Future<_TestAuthGateway> _pumpApp(
   AppointmentRepository? appointmentRepository,
   BusinessContentRepository? businessContentRepository,
   WorkNotesRepository? workNotesRepository,
+  UserSettingsRepository? userSettingsRepository,
 }) async {
   final authGateway = _TestAuthGateway(
     adminClaim: adminClaim,
@@ -264,6 +303,8 @@ Future<_TestAuthGateway> _pumpApp(
   if (notesRepository case final _TestWorkNotesRepository repository) {
     addTearDown(repository.dispose);
   }
+  final settingsRepository =
+      userSettingsRepository ?? _TestUserSettingsRepository();
   await tester.pumpWidget(
     BookServiceApp(
       authGateway: authGateway,
@@ -271,6 +312,7 @@ Future<_TestAuthGateway> _pumpApp(
           appointmentRepository ?? _TestAppointmentRepository(),
       businessContentRepository: contentRepository,
       workNotesRepository: notesRepository,
+      userSettingsRepository: settingsRepository,
     ),
   );
   return authGateway;
@@ -1723,6 +1765,93 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('theme-toggle')));
     await tester.pumpAndSettle();
 
+    expect(find.byTooltip('Switch to dark theme'), findsOneWidget);
+  });
+
+  testWidgets('Handedness and theme choices are saved for the signed-in user', (
+    tester,
+  ) async {
+    final settings = _TestUserSettingsRepository();
+    await _pumpApp(
+      tester,
+      startAsAuthenticated: true,
+      userSettingsRepository: settings,
+    );
+    await tester.pumpAndSettle();
+
+    // A brand-new account starts right-handed, following the device theme.
+    expect(find.byTooltip('Switch to left-handed layout'), findsOneWidget);
+    expect(find.byTooltip('Switch to dark theme'), findsOneWidget);
+    expect(settings.saves, isEmpty);
+
+    await tester.tap(find.byKey(const ValueKey('handedness-toggle')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('theme-toggle')));
+    await tester.pumpAndSettle();
+
+    expect(settings.saves, hasLength(2));
+    expect(settings.saves.last.userId, _testUserId);
+    final saved = settings.savedSettingsFor(_testUserId)!;
+    expect(saved.isLeftHanded, isTrue);
+    expect(saved.themeMode, ThemeMode.dark);
+  });
+
+  testWidgets('A saved layout is restored the next time the user signs in', (
+    tester,
+  ) async {
+    final settings = _TestUserSettingsRepository(
+      stored: {
+        _testUserId: const UserSettings(
+          isLeftHanded: true,
+          themeMode: ThemeMode.dark,
+        ),
+      },
+    );
+    await _pumpApp(
+      tester,
+      startAsAuthenticated: true,
+      userSettingsRepository: settings,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Switch to right-handed layout'), findsOneWidget);
+    expect(find.byTooltip('Switch to light theme'), findsOneWidget);
+  });
+
+  testWidgets('Signed-out visitors keep their layout for the session only', (
+    tester,
+  ) async {
+    final settings = _TestUserSettingsRepository();
+    await _pumpApp(tester, userSettingsRepository: settings);
+
+    await tester.tap(find.byKey(const ValueKey('handedness-toggle')));
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Switch to right-handed layout'), findsOneWidget);
+    expect(settings.saves, isEmpty);
+  });
+
+  testWidgets('Signing out returns to the default layout', (tester) async {
+    final settings = _TestUserSettingsRepository(
+      stored: {
+        _testUserId: const UserSettings(
+          isLeftHanded: true,
+          themeMode: ThemeMode.dark,
+        ),
+      },
+    );
+    final authGateway = await _pumpApp(
+      tester,
+      startAsAuthenticated: true,
+      userSettingsRepository: settings,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Switch to right-handed layout'), findsOneWidget);
+
+    await authGateway.signOut();
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Switch to left-handed layout'), findsOneWidget);
     expect(find.byTooltip('Switch to dark theme'), findsOneWidget);
   });
 

@@ -8,6 +8,7 @@ import 'app/book_service_app.dart';
 import 'data/appointments/appointment_repository.dart';
 import 'data/content/business_content_repository.dart';
 import 'data/content/work_notes_repository.dart';
+import 'data/user/user_settings_repository.dart';
 import 'services/firebase_auth_gateway.dart';
 
 Future<void> main() async {
@@ -26,6 +27,10 @@ Future<void> main() async {
         FirebaseAuth.instance,
       ),
       workNotesRepository: FirebaseWorkNotesRepository(
+        FirebaseFirestore.instance,
+        FirebaseAuth.instance,
+      ),
+      userSettingsRepository: FirebaseUserSettingsRepository(
         FirebaseFirestore.instance,
         FirebaseAuth.instance,
       ),

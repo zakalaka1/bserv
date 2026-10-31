@@ -51,6 +51,23 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Per-user layout preferences (handedness and light/dark theme). Customers
+    // and admins read and write only their own document, and only the two
+    // fields the app actually stores.
+    match /userSettings/{userId} {
+      allow get: if signedIn() && userId == request.auth.uid;
+      allow list: if false;
+
+      allow create, update: if signedIn()
+        && userId == request.auth.uid
+        && request.resource.data.keys().hasAll(['leftHanded', 'themeMode'])
+        && request.resource.data.keys().hasOnly(['leftHanded', 'themeMode'])
+        && request.resource.data.leftHanded is bool
+        && request.resource.data.themeMode in ['system', 'light', 'dark'];
+
+      allow delete: if false;
+    }
+
     match /appointments/{appointmentId} {
       function ownsAppointment() {
         return signedIn() && resource.data.userId == request.auth.uid;

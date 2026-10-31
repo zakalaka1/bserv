@@ -275,6 +275,16 @@ cluster sits on a single edge, the title centers between that edge and the
 opposite edge of the bar rather than on the bar's geometric midpoint; wide
 titles ellipsize instead of running under the cluster.
 
+Both choices belong to the signed-in account. `UserSettingsRepository` keeps
+them in `userSettings/{uid}` as `leftHanded` plus `themeMode` (one of `system`,
+`light`, or `dark`), and the app follows that document while the user is signed
+in. A brand-new account has no document yet, and the missing document is read
+as the defaults - right-handed, system theme - so nothing has to be created up
+front. Signed-out visitors can still use both toggles, but their choice lasts
+for the session only; signing out returns the app to the defaults, so one
+person's layout never carries into another's session. Firestore Rules let each
+user read and write only their own document, and only those two fields.
+
 ### Company Logo
 
 The landing screen (the Book tab's service-area map) shows the company logo in
